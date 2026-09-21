@@ -1,0 +1,25 @@
+NOVATECH SOLUTIONS — INTERNAL ENTERPRISE POLICY
+Document: Work_From_Home_Policy.txt
+Version: 2.5 | Effective Date: February 1, 2025
+Audience: All Eligible NovaTech Employees
+
+SECTION 1: ELIGIBILITY CRITERIA
+1.1 Probation Requirement:
+Employees who have successfully completed their mandatory six (6) months probation period are eligible to apply for remote/hybrid work arrangements. Employees currently on probation must work from the physical office unless an exceptional temporary waiver is granted by the HR Director.
+
+SECTION 2: REMOTE WORK LIMITS & SCHEDULING
+2.1 Maximum Remote Days:
+Eligible employees can work remotely up to two (2) days per week. The remaining three (3) days must be spent on-site at the designated corporate office.
+
+2.2 Manager Approval:
+Specific remote days must be agreed upon with the direct line manager and submitted into the HR scheduling tool by Friday 5:00 PM for the upcoming week. Line managers reserve the authority to adjust remote days based on business requirements, team standups, and client meetings.
+
+SECTION 3: TECHNICAL & SECURITY REQUIREMENTS
+3.1 Approved Hardware:
+All remote work must strictly be conducted on company-issued laptops. Using personal computers, tablets, or unmanaged devices for company business is strictly prohibited.
+
+3.2 Mandatory VPN Usage:
+Employees must connect to the corporate network via the NovaTech Secure Corporate VPN at all times when handling internal data or accessing internal systems.
+
+3.3 Secure Environment:
+Remote workers must ensure a private, quiet physical workspace where sensitive client conversations and company confidential information cannot be overheard or viewed by unauthorized parties.

@@ -1,0 +1,22 @@
+NOVATECH SOLUTIONS — INTERNAL ENTERPRISE POLICY
+Document: IT_Equipment_Policy.txt
+Version: 2.2 | Effective Date: January 1, 2025
+Audience: All Employees
+
+SECTION 1: HARDWARE ISSUANCE & REPLACEMENT CYCLE
+1.1 Standard Hardware Allocation:
+Upon joining, each employee is issued a standard workstation bundle consisting of:
+- One enterprise laptop (Dell XPS or MacBook Pro depending on departmental role)
+- Wireless mouse and external keyboard
+- Laptop charger and USB-C multiport hub
+
+1.2 Hardware Replacement Cycle:
+Standard company laptops are eligible for replacement or hardware refresh every three (3) years. Early replacements are approved only in the event of documented total hardware failure or major performance obsolescence approved by the IT Helpdesk Lead.
+
+SECTION 2: HOME OFFICE SETUP & PERIPHERALS
+2.1 External Monitor Reimbursement:
+Employees eligible for hybrid/remote work may claim a one-time reimbursement of up to $300 for an external monitor and ergonomic desk accessories. Claims must be submitted via the expense portal with valid receipts within sixty (60) days of completing probation.
+
+SECTION 3: RETURN OF COMPANY PROPERTY
+3.1 Equipment Return:
+Upon termination, resignation, or leave of absence exceeding 90 days, all company-assigned equipment including laptops, monitors, access badges, and hardware tokens must be returned to the IT Department by the employee's final working day.
