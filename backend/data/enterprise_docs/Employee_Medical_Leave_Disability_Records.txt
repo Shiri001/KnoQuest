@@ -1,0 +1,18 @@
+NOVATECH EMPLOYEE MEDICAL LEAVE AND DISABILITY ACCOMMODATION RECORDS
+Document ID: CONF-HR-MED-2026-V1
+Effective Date: February 1, 2026
+Applicability: HR Benefits Administrators, Occupational Health, Legal
+Classification: Tier 3 - Human Resources Confidential (Restricted to HR & Executive Admin)
+
+SECTION 1: STATUTORY MEDICAL LEAVE ADMINISTRATION
+NovaTech complies with the Family and Medical Leave Act (FMLA), Americans with Disabilities Act (ADA), and applicable international statutory sick leaves. Medical records, physician notes, and diagnosis certificates are classified as Restricted Health Information (RHI) under HIPAA and GDPR Article 9.
+
+SECTION 2: CONFIDENTIAL LEAVE UTILIZATION METRICS
+During calendar year 2025:
+- Total FMLA leaves processed: 28 cases (average duration: 7.4 weeks).
+- Parental bonding leaves processed: 44 cases (average duration: 12.0 weeks).
+- Short-Term Disability (STD) claims approved: 14 cases.
+- Long-Term Disability (LTD) transitions: 2 cases.
+
+SECTION 3: REASONABLE ACCOMMODATION CASE PROTOCOLS
+All requests for ergonomic, mental health, cognitive, or physical workplace accommodations must be reviewed through the interactive ADA dialogue process within ten (10) business days. Specific diagnosis details are never disclosed to frontline managers; only concrete accommodation capabilities and restrictions are provided.

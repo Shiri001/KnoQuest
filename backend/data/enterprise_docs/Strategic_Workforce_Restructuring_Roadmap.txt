@@ -1,0 +1,15 @@
+NOVATECH STRATEGIC WORKFORCE RESTRUCTURING AND AUTOMATION ROADMAP (PROJECT APEX)
+Document ID: TOP-SECRET-EXEC-APEX-2026-V1
+Effective Date: February 20, 2026
+Applicability: Executive Committee and Board Compensation Committee Only
+Classification: Tier 5 - Executive & Board Confidential (Restricted to Executive Admin)
+
+SECTION 1: AI AUTOMATION IMPACT ON INTERNAL OPERATIONS
+Over the 2026-2028 horizon, the deployment of NovaTech autonomous agents is projected to automate 40% of Tier-1 helpdesk ticketing, routine accounts payable invoice processing, and standard contract review workflows.
+
+SECTION 2: RESKILLING AND REALLOCATION FRAMEWORK
+1. Transition Academy: A dedicated $4,000,000 corporate upskilling academy will transition affected frontline personnel into high-value roles, including AI Agent Prompt Engineering, Enterprise Client Success, and Data Annotation Quality Assurance.
+2. Natural Attrition: Frontline staffing reductions will be achieved primarily through targeted natural attrition (projected at 6.5% annually).
+
+SECTION 3: SEVERANCE AND OUTPLACEMENT RESERVES
+In the event involuntary redundancies are mandated in legacy support units in Q4 2026, an initial severance reserve of $6,500,000 has been set aside, providing affected staff with minimum twelve (12) weeks severance, accelerated health coverage, and external outplacement career coaching.

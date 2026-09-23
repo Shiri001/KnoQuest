@@ -1,0 +1,14 @@
+NOVATECH CONFIDENTIAL INTELLECTUAL PROPERTY LITIGATION BRIEF AND SETTLEMENT STRATEGY
+Document ID: TOP-SECRET-LEGAL-LIT-2026-V1
+Effective Date: February 25, 2026
+Applicability: Chief Legal Officer, Board of Directors, Outside Litigation Counsel
+Classification: Tier 5 - Executive & Board Confidential (Restricted to Executive Admin)
+
+SECTION 1: CASE BACKGROUND: SYNAPSE TECHNOLOGIES V. NOVATECH
+In November 2025, competitor Synapse Technologies filed a patent infringement complaint in the US District Court for the Northern District of California (Case No. 3:25-cv-09182), asserting infringement of US Patent No. 11,842,910 relating to hybrid sparse-dense vector index retrieval.
+
+SECTION 2: LEGAL DEFENSE STRATEGY AND PRIOR ART ANALYSIS
+Outside patent counsel (Quinn Emanuel) has completed prior art invalidity charting. NovaTech has established incontrovertible evidence of prior public reduction to practice dating back to Q3 2023, well preceding the plaintiff's priority date. An Inter Partes Review (IPR) petition for patent invalidation will be filed before the USPTO Patent Trial and Appeal Board (PTAB) by April 2026.
+
+SECTION 3: SETTLEMENT PARAMETERS AND LITIGATION CONTINGENCY RESERVES
+The Board Audit Committee has approved an escrow litigation reserve of $2,800,000 to fund legal defense expenditures. While external counsel estimates an 85% probability of complete defense summary judgment, the Chief Legal Officer is authorized to enter confidential mediation if a worldwide cross-license covenant can be secured for under $1,200,000 with zero ongoing royalty obligations.

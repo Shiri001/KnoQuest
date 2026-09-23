@@ -1,0 +1,16 @@
+NOVATECH PRIVILEGED ACCESS MANAGEMENT (PAM) AND CREDENTIAL VAULT POLICY
+Document ID: CONF-IT-PAM-2026-V3
+Effective Date: January 1, 2026
+Applicability: System Administrators, Cloud Operators, and Database Engineers
+Classification: Tier 4 - IT & InfoSec Confidential (Restricted to IT & Executive Admin)
+
+SECTION 1: ZERO STANDING PRIVILEGES (ZSP) PRINCIPLE
+Standing administrative credentials (e.g. root, Global Administrator, Domain Admin) are permanently disabled. All administrative access is provisioned on a Just-In-Time (JIT) basis with automatic expiration after four (4) hours.
+
+SECTION 2: CYBERARK / HASHICORP VAULT BREAK-GLASS PROTOCOLS
+1. Emergency Check-Out: To access production database consoles or infrastructure hypervisors, engineers must submit an emergency check-out ticket linked to an approved Jira P1/P2 incident.
+2. Dual-Signoff Requirement: Check-outs for Root IAM or production database write privileges require real-time push notification approval from the CISO (David Kumar) or Lead Infrastructure Engineer (Marcus Vance).
+3. Session Recording: All interactive SSH, RDP, and shell command sessions initiated under elevated privileges are keystroke-logged and video-recorded in tamper-evident S3 Glacier storage.
+
+SECTION 3: SERVICE ACCOUNT AND API KEY GOVERNANCE
+Hardcoding API tokens, Azure Foundry keys, or database passwords in code repositories or environment text files is strictly prohibited and immediately blocked by Git pre-commit hooks. Secrets must be dynamically injected at container runtime using Azure Key Vault CSI drivers.

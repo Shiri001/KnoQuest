@@ -1,0 +1,16 @@
+NOVATECH ZERO-TRUST ARCHITECTURE AND CLOUD INFRASTRUCTURE RUNBOOK
+Document ID: CONF-IT-ZTA-2026-V3
+Effective Date: January 15, 2026
+Applicability: IT Systems Engineers, Cloud Architects, and DevSecOps Staff
+Classification: Tier 4 - IT & InfoSec Confidential (Restricted to IT & Executive Admin)
+
+SECTION 1: ZERO-TRUST NETWORK TOPOLOGY OVERVIEW
+NovaTech enforces a strict "Never Trust, Always Verify" perimeterless architecture across Azure (East US 2 primary, West US 3 secondary) and AWS multi-region deployments. Internal microservices communicate exclusively via mutual TLS (mTLS) with short-lived X.509 certificates issued by HashiCorp Vault.
+
+SECTION 2: ROOT CA CERTIFICATES AND CRYPTOGRAPHIC ROTATION
+1. Internal PKI: The NovaTech Root Certificate Authority (CA) private keys reside within hardware security modules (Azure Key Vault HSM Tier FIPS 140-2 Level 3).
+2. Intermediate CAs: Intermediate CAs are rotated every eighteen (18) months; production service certificates expire after thirty (30) days and auto-renew via cert-manager.
+3. SSH Key Quarantine: Static SSH keys on production bastion hosts are prohibited. Engineers authenticate through Teleport zero-trust access proxies with ephemeral certificate lifespans of eight (8) hours.
+
+SECTION 3: PRODUCTION VPC PEERING AND FIREWALL ACCESS LISTS
+Direct public IP exposure on database or search cluster nodes is disabled. The Azure AI Search cluster (knoquest-novatech-index) and Azure OpenAI Foundry endpoints accept traffic solely through Private Endpoints mapped to internal Virtual Network Subnet 10.240.12.0/24 with Network Security Group (NSG) rules enforced by Palo Alto virtual firewalls.

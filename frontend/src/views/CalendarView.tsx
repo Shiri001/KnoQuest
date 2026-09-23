@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Trash2 } from 'lucide-react';
 import type { EmployeePersona } from '../types/chat';
-import { fetchCalendar, bookMeeting } from '../services/api';
+import { fetchCalendar, bookMeeting, deleteMeeting } from '../services/api';
 import { ConfirmationModal } from '../components/common/ConfirmationModal';
 import { ActionFeedbackToast } from '../components/common/ActionFeedbackToast';
 
@@ -44,11 +45,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ currentUser }) => {
     message: string;
     details?: { label: string; value: string }[];
     confirmText?: string;
+    isDanger?: boolean;
+    iconType?: 'send' | 'calendar' | 'ticket' | 'delete' | 'general';
     onConfirm: () => void;
   }>({
     isOpen: false,
     title: '',
     message: '',
+    isDanger: false,
+    iconType: 'calendar',
     onConfirm: () => {},
   });
 
@@ -91,6 +96,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ currentUser }) => {
         { label: 'Location', value: location.trim() },
       ],
       confirmText: 'Proceed & Schedule',
+      isDanger: false,
+      iconType: 'calendar',
       onConfirm: async () => {
         setConfirmModal((prev) => ({ ...prev, isOpen: false }));
         await executeBookMeeting();
@@ -117,10 +124,54 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ currentUser }) => {
       setShowModal(false);
       await loadCalendar();
     } catch (err: any) {
+      const isConflict = err.message && err.message.includes('Time frame conflict');
       setToast({
-        message: `Error booking meeting: ${err.message}`,
+        message: err.message || 'Failed to book meeting.',
         type: 'error',
-        title: 'Scheduling Failed',
+        title: isConflict ? 'Time Frame Conflict' : 'Scheduling Failed',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const promptCancelMeeting = (evt: CalendarEvent) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Cancel Scheduled Meeting',
+      message: `Are you sure you want to cancel and delete "${evt.title}"? This appointment will be permanently removed from Microsoft Teams and Outlook for all attendees.`,
+      details: [
+        { label: 'Meeting Title', value: evt.title },
+        { label: 'Time Slot', value: `${evt.start_time} - ${evt.end_time || ''}` },
+        { label: 'Location', value: evt.location },
+        { label: 'Attendees', value: evt.attendees },
+        { label: 'Event ID', value: evt.event_id },
+      ],
+      confirmText: 'Yes, Cancel Meeting',
+      isDanger: true,
+      iconType: 'delete',
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        await executeDeleteMeeting(evt);
+      },
+    });
+  };
+
+  const executeDeleteMeeting = async (evt: CalendarEvent) => {
+    setSubmitting(true);
+    try {
+      await deleteMeeting(evt.event_id);
+      setToast({
+        message: `Meeting '${evt.title}' (${evt.event_id}) was cancelled and removed from the calendar.`,
+        type: 'success',
+        title: 'Meeting Cancelled',
+      });
+      await loadCalendar();
+    } catch (err: any) {
+      setToast({
+        message: err.message || 'Failed to cancel meeting.',
+        type: 'error',
+        title: 'Cancellation Failed',
       });
     } finally {
       setSubmitting(false);
@@ -147,8 +198,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ currentUser }) => {
         </button>
       </div>
 
-
-
       {loading ? (
         <div className="calendar-loading">
           <span className="spinner-icon"></span>
@@ -164,7 +213,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ currentUser }) => {
             <div key={evt.event_id} className="calendar-event-card">
               <div className="event-time-column">
                 <span className="event-date-text">{evt.start_time.split(' ')[0]}</span>
-                <span className="event-time-text">{evt.start_time.split(' ')[1] || '09:00'}</span>
+                <span className="event-time-text">
+                  {evt.start_time.split(' ')[1] || '09:00'}
+                  {evt.end_time ? ` - ${evt.end_time.split(' ')[1] || ''}` : ''}
+                </span>
               </div>
 
               <div className="event-details-column">
@@ -188,6 +240,18 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ currentUser }) => {
                     {evt.attendees}
                   </span>
                 </div>
+              </div>
+
+              <div className="event-actions-column">
+                <button
+                  type="button"
+                  className="btn-cancel-meeting"
+                  onClick={() => promptCancelMeeting(evt)}
+                  title={`Cancel meeting ${evt.event_id}`}
+                >
+                  <Trash2 size={14} />
+                  <span>Cancel</span>
+                </button>
               </div>
             </div>
           ))}
@@ -275,7 +339,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ currentUser }) => {
         message={confirmModal.message}
         details={confirmModal.details}
         confirmText={confirmModal.confirmText}
-        iconType="calendar"
+        isDanger={confirmModal.isDanger}
+        iconType={confirmModal.iconType || 'calendar'}
         loading={submitting}
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}

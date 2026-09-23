@@ -1,0 +1,22 @@
+NOVATECH ENGINEERING HIRING AND HEADCOUNT BUDGET POLICY
+Document ID: POL-ENG-HC-2026-V1
+Effective Date: January 1, 2026
+Applicability: Engineering Directors, Hiring Managers, and Recruiting Leads
+Classification: Tier 2 - Management & Leadership (Restricted to Managers & Executives)
+
+SECTION 1: FY26 HEADCOUNT ALLOCATION MATRIX
+The Engineering department is authorized for forty-two (42) new full-time requisitions across FY26, allocated as follows:
+- Platform & Cloud Infrastructure: 14 openings (Kubernetes, Terraform, Azure RAG specialist roles).
+- Core AI & Search Agents: 16 openings (FastAPI, LLM orchestration, vector databases).
+- Enterprise Web & Mobile Frontend: 8 openings (React 19, TypeScript, WCAG accessibility).
+- Security & Compliance: 4 openings (DevSecOps, penetration testing, IAM).
+
+SECTION 2: COMPENSATION BANDS BY LEVEL (CONFIDENTIAL TO HIRING MANAGERS)
+- Level L3 (Associate Software Engineer): Base $95,000 - $115,000 | Stock Grant: $20,000 over 4 yrs.
+- Level L4 (Software Engineer II): Base $125,000 - $150,000 | Stock Grant: $45,000 over 4 yrs.
+- Level L5 (Senior Software Engineer): Base $160,000 - $190,000 | Stock Grant: $90,000 over 4 yrs.
+- Level L6 (Staff / Principal Engineer): Base $200,000 - $240,000 | Stock Grant: $160,000 over 4 yrs.
+- Level M1/M2 (Engineering Manager / Director): Base $195,000 - $250,000 | Target Bonus: 25% | Stock Grant: $180,000 over 4 yrs.
+
+SECTION 3: OFFER EXTENSION APPROVAL MATRIX
+Offers within the midpoint range require approval from the Hiring Manager and HR Talent Partner. Any offer exceeding the 75th percentile of the band or requesting sign-on bonuses over $15,000 requires direct written approval from the VP of Engineering and CFO.

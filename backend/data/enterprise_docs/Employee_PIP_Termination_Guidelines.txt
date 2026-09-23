@@ -1,0 +1,17 @@
+NOVATECH MANAGEMENT GUIDELINES FOR PERFORMANCE IMPROVEMENT PLANS (PIP) AND TERMINATIONS
+Document ID: GUI-MGT-PIP-2026-V3
+Effective Date: January 1, 2026
+Applicability: People Managers, Human Resources Business Partners (HRBPs)
+Classification: Tier 2 - Management & Leadership (Restricted to Managers & Executives)
+
+SECTION 1: PIP INITIATION CRITERIA
+A formal Performance Improvement Plan (PIP) is a structured remediation tool initiated when an employee consistently fails to meet critical job responsibilities or demonstrates performance rated below expectations for two consecutive review periods. A PIP should never be initiated without prior verbal counseling and written documentation.
+
+SECTION 2: PIP TIMELINE AND MILESTONES
+1. Duration: PIP periods typically span thirty (30), sixty (60), or ninety (90) calendar days depending on role complexity.
+2. Measurable Objectives: The PIP document must specify at least three (3) concrete, measurable deliverables with explicit delivery deadlines and quantitative acceptance criteria.
+3. Weekly Check-Ins: The manager must conduct weekly progress meetings, documenting notes and status updates in the HR Workday portal.
+
+SECTION 3: OUTCOMES AND SEPARATION PROCEDURES
+1. Successful Completion: If all objectives are met satisfactorily by the end of the evaluation period, the employee returns to standard standing, with performance monitored for twelve (12) months.
+2. Involuntary Separation: If the employee fails to meet the documented criteria, the manager and HRBP initiate involuntary termination. Severance packages are governed by employment contract terms and corporate tenure grids. All company IT access is suspended immediately upon formal separation notification.

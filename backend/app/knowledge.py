@@ -9,6 +9,59 @@ from .models.schemas import SourceCitation
 
 logger = logging.getLogger("knoquest.knowledge")
 
+DOCUMENT_ROLE_ACCESS: Dict[str, Dict[str, Any]] = {
+    # Tier 1: General Enterprise (Authorized: Employee, Manager, HR, IT, Admin)
+    "Code_of_Conduct.txt": {"category": "Ethics & Conduct", "tier": "Tier 1 - General Enterprise", "roles": ["Employee", "Manager", "HR", "IT", "Admin"]},
+    "Employee_Benefits.txt": {"category": "Human Resources", "tier": "Tier 1 - General Enterprise", "roles": ["Employee", "Manager", "HR", "IT", "Admin"]},
+    "HR_Policy.txt": {"category": "Human Resources", "tier": "Tier 1 - General Enterprise", "roles": ["Employee", "Manager", "HR", "IT", "Admin"]},
+    "IT_Equipment_Policy.txt": {"category": "Information Technology", "tier": "Tier 1 - General Enterprise", "roles": ["Employee", "Manager", "HR", "IT", "Admin"]},
+    "IT_Security_Policy.txt": {"category": "Information Technology", "tier": "Tier 1 - General Enterprise", "roles": ["Employee", "Manager", "HR", "IT", "Admin"]},
+    "Leave_Holiday_Policy.txt": {"category": "Human Resources", "tier": "Tier 1 - General Enterprise", "roles": ["Employee", "Manager", "HR", "IT", "Admin"]},
+    "Travel_Expense_Policy.txt": {"category": "Finance & Travel", "tier": "Tier 1 - General Enterprise", "roles": ["Employee", "Manager", "HR", "IT", "Admin"]},
+    "Work_From_Home_Policy.txt": {"category": "Operations & Remote Work", "tier": "Tier 1 - General Enterprise", "roles": ["Employee", "Manager", "HR", "IT", "Admin"]},
+    "Workplace_Health_Safety.txt": {"category": "Operations & Workplace Safety", "tier": "Tier 1 - General Enterprise", "roles": ["Employee", "Manager", "HR", "IT", "Admin"]},
+    "Whistleblower_Ethics_Policy.txt": {"category": "Ethics & Conduct", "tier": "Tier 1 - General Enterprise", "roles": ["Employee", "Manager", "HR", "IT", "Admin"]},
+    "Intellectual_Property_NDA_Policy.txt": {"category": "Legal & IP", "tier": "Tier 1 - General Enterprise", "roles": ["Employee", "Manager", "HR", "IT", "Admin"]},
+    "Social_Media_Public_Communications_Policy.txt": {"category": "Communications & Brand", "tier": "Tier 1 - General Enterprise", "roles": ["Employee", "Manager", "HR", "IT", "Admin"]},
+
+    # Tier 2: Management & Leadership (Authorized: Manager, Admin)
+    "Manager_Performance_Review_SOP.txt": {"category": "Management & Leadership", "tier": "Tier 2 - Management & Leadership", "roles": ["Manager", "Admin"]},
+    "Engineering_Hiring_Headcount_Budget.txt": {"category": "Management & Leadership", "tier": "Tier 2 - Management & Leadership", "roles": ["Manager", "Admin"]},
+    "Project_Overtime_OnCall_Compensation.txt": {"category": "Management & Leadership", "tier": "Tier 2 - Management & Leadership", "roles": ["Manager", "Admin"]},
+    "Employee_PIP_Termination_Guidelines.txt": {"category": "Management & Leadership", "tier": "Tier 2 - Management & Leadership", "roles": ["Manager", "Admin"]},
+    "Departmental_Discretionary_Budget_Policy.txt": {"category": "Management & Leadership", "tier": "Tier 2 - Management & Leadership", "roles": ["Manager", "Admin"]},
+
+    # Tier 3: Human Resources Confidential (Authorized: HR, Admin)
+    "Executive_Compensation_Salary_Grids.txt": {"category": "Human Resources Confidential", "tier": "Tier 3 - HR Confidential", "roles": ["HR", "Admin"]},
+    "Internal_Workplace_Grievance_Investigation_Log.txt": {"category": "Human Resources Confidential", "tier": "Tier 3 - HR Confidential", "roles": ["HR", "Admin"]},
+    "Global_Payroll_Banking_Compliance.txt": {"category": "Human Resources Confidential", "tier": "Tier 3 - HR Confidential", "roles": ["HR", "Admin"]},
+    "Diversity_Equity_Inclusion_Audit_Report.txt": {"category": "Human Resources Confidential", "tier": "Tier 3 - HR Confidential", "roles": ["HR", "Admin"]},
+    "Employee_Medical_Leave_Disability_Records.txt": {"category": "Human Resources Confidential", "tier": "Tier 3 - HR Confidential", "roles": ["HR", "Admin"]},
+
+    # Tier 4: IT & Information Security Confidential (Authorized: IT, Admin)
+    "Zero_Trust_Architecture_Infra_Runbook.txt": {"category": "IT & Security Confidential", "tier": "Tier 4 - IT & InfoSec Confidential", "roles": ["IT", "Admin"]},
+    "Disaster_Recovery_Failover_Protocol.txt": {"category": "IT & Security Confidential", "tier": "Tier 4 - IT & InfoSec Confidential", "roles": ["IT", "Admin"]},
+    "Privileged_Access_Management_PAM_Policy.txt": {"category": "IT & Security Confidential", "tier": "Tier 4 - IT & InfoSec Confidential", "roles": ["IT", "Admin"]},
+    "Security_Operations_Incident_Response_Playbook.txt": {"category": "IT & Security Confidential", "tier": "Tier 4 - IT & InfoSec Confidential", "roles": ["IT", "Admin"]},
+    "Internal_Vulnerability_Penetration_Test_Audit.txt": {"category": "IT & Security Confidential", "tier": "Tier 4 - IT & InfoSec Confidential", "roles": ["IT", "Admin"]},
+
+    # Tier 5: Executive & Board of Directors (Authorized: Admin Only)
+    "Board_Resolution_Project_Titan_Merger.txt": {"category": "Executive & Board", "tier": "Tier 5 - Executive & Board Confidential", "roles": ["Admin"]},
+    "Q4_Consolidated_Financial_Audit_Forecast.txt": {"category": "Executive & Board", "tier": "Tier 5 - Executive & Board Confidential", "roles": ["Admin"]},
+    "Strategic_Workforce_Restructuring_Roadmap.txt": {"category": "Executive & Board", "tier": "Tier 5 - Executive & Board Confidential", "roles": ["Admin"]},
+    "C_Suite_Succession_Contingency_Plan.txt": {"category": "Executive & Board", "tier": "Tier 5 - Executive & Board Confidential", "roles": ["Admin"]},
+    "Confidential_Intellectual_Property_Litigation_Brief.txt": {"category": "Executive & Board", "tier": "Tier 5 - Executive & Board Confidential", "roles": ["Admin"]}
+}
+
+def is_document_authorized_for_role(filename: str, role: str) -> bool:
+    norm_role = role.strip() if role else "Employee"
+    if norm_role in ["Admin", "Executive", "Top Team"]:
+        return True
+    meta = DOCUMENT_ROLE_ACCESS.get(filename)
+    if not meta:
+        return True
+    return norm_role in meta.get("roles", ["Employee", "Manager", "HR", "IT", "Admin"])
+
 class DocumentChunk:
     def __init__(self, chunk_id: str, source: str, section: str, content: str):
         self.chunk_id = chunk_id
@@ -224,12 +277,14 @@ class KnowledgeBase:
         self,
         query: str,
         top_k: int = 3,
-        session_file_id: Optional[str] = None
+        session_file_id: Optional[str] = None,
+        user_role: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
         Retrieves the top-k most relevant policy chunks.
         When AZURE_MODE=true: Uses Azure AI Search (with vector/hybrid search when available).
         When AZURE_MODE=false: Uses local BM25 + Cosine relevance sandbox.
+        Strictly enforces Zero-Trust RBAC: candidate chunks are filtered by user_role.
         """
         # 1. AZURE AI SEARCH PATH (when AZURE_MODE=true)
         if settings.AZURE_MODE:
@@ -285,6 +340,10 @@ class KnowledgeBase:
                         "score": res.get("@search.score", 1.0)
                     })
 
+                # Filter Azure Search results strictly by user_role
+                if user_role:
+                    azure_hits = [h for h in azure_hits if is_document_authorized_for_role(h.get("source", ""), user_role)]
+
                 return azure_hits[:top_k]
             except Exception as e:
                 logger.error(f"Azure Search query error: {e}", exc_info=True)
@@ -294,6 +353,10 @@ class KnowledgeBase:
         candidate_chunks = list(self.chunks)
         if session_file_id and session_file_id in self.session_chunks:
             candidate_chunks = self.session_chunks[session_file_id] + candidate_chunks
+
+        # Zero-Trust RBAC filtering: only evaluate documents authorized for the user's role
+        if user_role:
+            candidate_chunks = [c for c in candidate_chunks if is_document_authorized_for_role(c.source, user_role)]
 
         if not candidate_chunks:
             return []
@@ -328,11 +391,13 @@ class KnowledgeBase:
             if len(clean_q) > 4 and clean_q in full_text:
                 cosine_score += 0.4
 
-            # Key terms boost (leave, wfh, hours, password, probation, incident, laptop, hotel, reimbursement, benefits, equipment)
+            # Key terms boost
             important_terms = [
                 "leave", "remote", "wfh", "hours", "probation", "password", "mfa",
                 "incident", "car", "travel", "reimbursement", "benefit", "benefits",
-                "equipment", "replacement", "insurance"
+                "equipment", "replacement", "insurance", "salary", "bonus", "equity",
+                "merger", "acquisition", "restructuring", "audit", "compliance", "dr",
+                "failover", "zero-trust", "pam", "soc", "grievance", "pip", "budget"
             ]
             for term in important_terms:
                 if term in query_tokens and term in full_text:
@@ -354,5 +419,33 @@ class KnowledgeBase:
                 })
 
         return results
+
+    def retrieve(
+        self,
+        query: str,
+        top_k: int = 3,
+        session_file_id: Optional[str] = None,
+        user_role: Optional[str] = None
+    ) -> tuple:
+        """Helper to return chunks and SourceCitation models for agent/tools."""
+        raw_results = self.search_knowledge(query, top_k=top_k, session_file_id=session_file_id, user_role=user_role)
+        chunks = [
+            DocumentChunk(
+                chunk_id=r.get("chunk_id", ""),
+                source=r.get("source", ""),
+                section=r.get("section", ""),
+                content=r.get("content", "")
+            )
+            for r in raw_results
+        ]
+        citations = [
+            SourceCitation(
+                source=r.get("source", ""),
+                section=r.get("section", ""),
+                content=r.get("content", "")[:200]
+            )
+            for r in raw_results
+        ]
+        return chunks, citations
 
 knowledge_base = KnowledgeBase()

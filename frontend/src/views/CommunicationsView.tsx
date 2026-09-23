@@ -468,78 +468,7 @@ export const CommunicationsView: React.FC<CommunicationsViewProps> = ({
                       : `Created / Updated on ${selectedItem?.timestamp}`}
                   </span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    className="btn-send-email"
-                    onClick={promptSendDraft}
-                    disabled={submitting}
-                    style={{ padding: '0.45rem 0.9rem', fontSize: '0.8rem' }}
-                    title="Send message immediately through Microsoft Outlook"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="22" y1="2" x2="11" y2="13"></line>
-                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                    <span>{submitting ? 'Sending...' : 'Send via Outlook'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn-save-draft"
-                    onClick={promptSaveDraft}
-                    disabled={submitting}
-                    style={{ padding: '0.45rem 0.85rem', fontSize: '0.8rem' }}
-                    title="Save changes to your drafts folder"
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '4px' }}>
-                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                      <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                      <polyline points="7 3 7 8 15 8"></polyline>
-                    </svg>
-                    <span>{submitting ? 'Saving...' : isComposing ? 'Save Draft' : 'Update Draft'}</span>
-                  </button>
-
-                  {isComposing && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsComposing(false);
-                        if (items.length > 0) selectItem(items[0]);
-                      }}
-                      style={{
-                        background: 'transparent',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        color: '#94A3B8',
-                        borderRadius: '6px',
-                        padding: '0.45rem 0.75rem',
-                        fontSize: '0.8rem',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  )}
-
-                  {!isComposing && selectedItem?.status === 'draft' && (
-                    <button
-                      type="button"
-                      onClick={() => promptDeleteDraft(selectedItem.comm_id)}
-                      disabled={submitting}
-                      style={{
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid rgba(239, 68, 68, 0.25)',
-                        color: '#F87171',
-                        borderRadius: '6px',
-                        padding: '0.45rem 0.75rem',
-                        fontSize: '0.8rem',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Discard
-                    </button>
-                  )}
-
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                   <span className="outlook-tag">
                     {isComposing ? 'New Outlook' : 'Draft'}
                   </span>

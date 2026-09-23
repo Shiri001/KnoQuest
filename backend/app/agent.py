@@ -1,4 +1,5 @@
 import re
+import json
 import logging
 from typing import Dict, Any, List, Optional
 from .config import settings
@@ -281,23 +282,94 @@ class FoundryAgentService:
             "create ticket", "open ticket", "raise ticket", "log ticket", "issue a ticket"
         ]
         if (any(trig in lower_msg for trig in ticket_triggers) and ("ticket" in lower_msg or "broken" in lower_msg or "not working" in lower_msg)) or ("create" in lower_msg and "ticket" in lower_msg):
-            tool_res = mcp_registry.execute_tool("create_it_ticket", {"issue": clean_msg, "priority": "Medium"}, identity)
+            issue_title, issue_priority = self._structure_intelligent_ticket(clean_msg)
+            tool_res = mcp_registry.execute_tool("create_it_ticket", {"issue": issue_title, "priority": issue_priority}, identity)
             if tool_res.get("status") == "permission_denied":
-                return permission_denied_response(tool_res, "create_it_ticket", {"issue": clean_msg})
+                return permission_denied_response(tool_res, "create_it_ticket", {"issue": issue_title})
             ans = (
-                f"I have created an IT Support Ticket for you.\n\n"
-                f"• **Ticket ID:** {tool_res['ticket_id']}\n"
+                f"🎫 **IT Support Ticket Created**\n\n"
+                f"• **Ticket ID:** `{tool_res['ticket_id']}`\n"
                 f"• **Status:** {tool_res['ticket_status']}\n"
-                f"• **Priority:** {tool_res['priority']}\n"
-                f"• **User:** {identity.name} (`{identity.full_id}`)\n"
-                f"• **Issue:** {tool_res['issue']}\n\n"
-                f"An IT technician from the NovaTech Helpdesk will contact you shortly."
+                f"• **Priority:** **{tool_res['priority']}**\n"
+                f"• **Category / Issue:** {tool_res['issue']}\n"
+                f"• **User:** {identity.name} (`{identity.full_id}`)\n\n"
+                f"💡 *An IT technician from the NovaTech Helpdesk has been dispatched and will contact you shortly.*"
             )
             return ChatResponse(
                 answer=ans,
                 conversation_id=conversation_id,
                 sources=[],
-                tool_calls=[ToolCallResult(tool_name="create_it_ticket", parameters={"issue": clean_msg}, result=tool_res)],
+                tool_calls=[ToolCallResult(tool_name="create_it_ticket", parameters={"issue": issue_title, "priority": issue_priority}, result=tool_res)],
+                mode="azure_foundry" if self.is_azure_ready else "local_sandbox",
+                language=language,
+                authenticated_user=identity.model_dump()
+            )
+        # 4d. Update / Resolve IT Ticket (requires it.update_ticket)
+        is_update_ticket = any(kw in lower_msg for kw in [
+            "resolve ticket", "resolve it ticket", "mark ticket as resolved", "mark as resolved",
+            "close ticket", "close it ticket", "update ticket", "update it ticket", "ticket resolved"
+        ]) or bool(re.search(r'\b(resolve|close|update)\b.*\bIT-\d+\b', clean_msg, re.IGNORECASE))
+
+        if is_update_ticket:
+            ticket_id_match = re.search(r'\b(IT-\d+)\b', clean_msg, re.IGNORECASE)
+            ticket_id = ticket_id_match.group(1).upper() if ticket_id_match else ""
+            if not ticket_id:
+                # Fallback to the latest ticket if any
+                from .database import get_db_connection
+                conn = get_db_connection()
+                cur = conn.cursor()
+                cur.execute("SELECT ticket_id FROM it_tickets WHERE status != 'Resolved' ORDER BY created_at DESC LIMIT 1")
+                r = cur.fetchone()
+                conn.close()
+                if r:
+                    ticket_id = r[0]
+
+            if not ticket_id:
+                return ChatResponse(
+                    answer="Please specify the Ticket ID you wish to update (e.g., `Resolve ticket IT-1001`).",
+                    conversation_id=conversation_id,
+                    sources=[],
+                    tool_calls=[],
+                    mode="azure_foundry" if self.is_azure_ready else "local_sandbox",
+                    language=language,
+                    authenticated_user=identity.model_dump()
+                )
+
+            # Determine new status
+            if "in progress" in lower_msg:
+                new_status = "In Progress"
+            elif "open" in lower_msg and "reopen" in lower_msg:
+                new_status = "Open"
+            else:
+                new_status = "Resolved"
+
+            tool_res = mcp_registry.execute_tool(
+                "update_it_ticket",
+                {"ticket_id": ticket_id, "status": new_status},
+                identity
+            )
+            if tool_res.get("status") == "permission_denied":
+                return permission_denied_response(tool_res, "update_it_ticket", {"ticket_id": ticket_id, "status": new_status})
+            
+            if tool_res.get("status") == "error":
+                ans = f"⚠️ **Ticket Update Notice**: {tool_res.get('message', 'Ticket not found.')}"
+            else:
+                t = tool_res["ticket"]
+                ans = (
+                    f"✅ **IT Ticket Updated Successfully**\n\n"
+                    f"• **Ticket ID:** `{t['ticket_id']}`\n"
+                    f"• **Status:** **{t['status']}**\n"
+                    f"• **User:** {t['user_name']} ({t['department']})\n"
+                    f"• **Priority:** {t['priority']}\n"
+                    f"• **Issue:** {t['issue']}\n\n"
+                    f"💡 *{'This ticket is now resolved and archived from the active IT tickets list. The resolved counter has been incremented.' if new_status == 'Resolved' else 'The ticket status has been updated in the system.'}*"
+                )
+
+            return ChatResponse(
+                answer=ans,
+                conversation_id=conversation_id,
+                sources=[],
+                tool_calls=[ToolCallResult(tool_name="update_it_ticket", parameters={"ticket_id": ticket_id, "status": new_status}, result=tool_res)],
                 mode="azure_foundry" if self.is_azure_ready else "local_sandbox",
                 language=language,
                 authenticated_user=identity.model_dump()
@@ -326,10 +398,12 @@ class FoundryAgentService:
 
         if any(kw in lower_msg for kw in ["schedule meeting", "book meeting", "create meeting", "schedule a meeting", "book a sync", "schedule sync"]):
             parsed_meeting = parse_meeting_intent(clean_msg, organizer_email=identity.email)
+            refined_title = self._structure_intelligent_meeting(clean_msg, parsed_meeting["title"])
+            parsed_meeting["title"] = refined_title
             tool_res = mcp_registry.execute_tool(
                 "schedule_meeting",
                 {
-                    "title": parsed_meeting["title"],
+                    "title": refined_title,
                     "start_time": parsed_meeting["start_time"],
                     "end_time": parsed_meeting["end_time"],
                     "attendees": parsed_meeting["attendees"],
@@ -339,6 +413,21 @@ class FoundryAgentService:
             )
             if tool_res.get("status") == "permission_denied":
                 return permission_denied_response(tool_res, "schedule_meeting", parsed_meeting)
+            if tool_res.get("status") in ["conflict", "error"]:
+                ans = (
+                    f"⚠️ **Scheduling Conflict - Time Frame Already Booked**\n\n"
+                    f"{tool_res.get('message', 'The requested time frame conflicts with an existing scheduled meeting.')}\n\n"
+                    f"🔒 **Enterprise Conflict Policy:** Existing meeting time frames cannot be overridden. Please choose an alternate start or end time."
+                )
+                return ChatResponse(
+                    answer=ans,
+                    conversation_id=conversation_id,
+                    sources=[],
+                    tool_calls=[ToolCallResult(tool_name="schedule_meeting", parameters=parsed_meeting, result=tool_res)],
+                    mode="azure_foundry" if self.is_azure_ready else "local_sandbox",
+                    language=language,
+                    authenticated_user=identity.model_dump()
+                )
             ans = (
                 f"✅ **Calendar Meeting Scheduled**\n\n"
                 f"• **Title:** {tool_res['title']}\n"
@@ -355,6 +444,58 @@ class FoundryAgentService:
                 conversation_id=conversation_id,
                 sources=[],
                 tool_calls=[ToolCallResult(tool_name="schedule_meeting", parameters=parsed_meeting, result=tool_res)],
+                mode="azure_foundry" if self.is_azure_ready else "local_sandbox",
+                language=language,
+                authenticated_user=identity.model_dump()
+            )
+
+        # 5b. Cancel / Delete Calendar Meeting
+        if any(kw in lower_msg for kw in ["cancel meeting", "delete meeting", "cancel my meeting", "delete my meeting", "remove meeting", "cancel the meeting", "cancel sync"]):
+            evt_match = re.search(r'\b(EVT-\d+)\b', clean_msg, re.IGNORECASE)
+            event_id = evt_match.group(1).upper() if evt_match else None
+
+            if not event_id:
+                cal_res = mcp_registry.execute_tool("get_my_calendar", {}, identity)
+                my_events = cal_res.get("events", [])
+                for ev in my_events:
+                    ev_title_lower = ev["title"].lower()
+                    words = [w for w in re.findall(r'\b[a-z]{3,}\b', lower_msg) if w not in ["cancel", "delete", "meeting", "sync", "remove", "with", "about", "the"]]
+                    if words and any(w in ev_title_lower for w in words):
+                        event_id = ev["event_id"]
+                        break
+                if not event_id and len(my_events) == 1:
+                    event_id = my_events[0]["event_id"]
+
+            if not event_id:
+                ans = "Please specify the Event ID (e.g. `EVT-201`) or title of the meeting you wish to cancel."
+                return ChatResponse(
+                    answer=ans,
+                    conversation_id=conversation_id,
+                    sources=[],
+                    tool_calls=[],
+                    mode="azure_foundry" if self.is_azure_ready else "local_sandbox",
+                    language=language,
+                    authenticated_user=identity.model_dump()
+                )
+
+            tool_res = mcp_registry.execute_tool("delete_meeting", {"event_id": event_id}, identity)
+            if tool_res.get("status") == "permission_denied":
+                return permission_denied_response(tool_res, "delete_meeting", {"event_id": event_id})
+            if tool_res.get("status") == "error":
+                ans = f"❌ **Failed to Cancel Meeting:** {tool_res.get('message')}"
+            else:
+                ans = (
+                    f"🗑️ **Meeting Successfully Cancelled**\n\n"
+                    f"• **Title:** {tool_res.get('title')}\n"
+                    f"• **Event ID:** `{tool_res.get('event_id')}`\n"
+                    f"• **Time Slot:** {tool_res.get('start_time')} - {tool_res.get('end_time')}\n\n"
+                    f"The appointment has been removed from your calendar and the time slot is now available."
+                )
+            return ChatResponse(
+                answer=ans,
+                conversation_id=conversation_id,
+                sources=[],
+                tool_calls=[ToolCallResult(tool_name="delete_meeting", parameters={"event_id": event_id}, result=tool_res)],
                 mode="azure_foundry" if self.is_azure_ready else "local_sandbox",
                 language=language,
                 authenticated_user=identity.model_dump()
@@ -414,19 +555,58 @@ class FoundryAgentService:
 
         # 6b. Send Email Intent (must come before draft email to avoid false triggers)
         is_send_email = any(kw in lower_msg for kw in [
-            "send email", "send an email", "send the email", "send a mail", "send mail",
+            "send email", "send an email", "send the email", "send a mail", "send mail", "send the mail",
             "send message", "send draft", "send this draft", "send the draft", "send out email", "send communication"
         ])
 
         if is_send_email:
             parsed = parse_email_intent(clean_msg)
-            tool_res = mcp_registry.execute_tool(
-                "send_email",
-                {"recipient": parsed["recipient"], "subject": parsed["subject"], "body": parsed["body"]},
-                identity
-            )
+            draft_id = parsed.get("draft_id")
+            recipient = parsed["recipient"]
+            subject = parsed["subject"]
+            body = parsed["body"]
+
+            # If user refers to an existing draft or says "send the draft" without details
+            from .database import get_db_connection
+            conn = get_db_connection()
+            cur = conn.cursor()
+            if draft_id:
+                cur.execute("SELECT * FROM communications WHERE comm_id = ? AND sender_id = ?", (draft_id, identity.employee_id))
+                draft_row = cur.fetchone()
+                if draft_row:
+                    recipient = draft_row["recipient"]
+                    subject = draft_row["subject"]
+                    body = draft_row["body"]
+            elif clean_msg.strip().lower() in ["send draft", "send the draft", "send this draft", "send the email", "send the mail", "send mail", "send email"]:
+                cur.execute("SELECT * FROM communications WHERE sender_id = ? AND status = 'draft' ORDER BY timestamp DESC LIMIT 1", (identity.employee_id,))
+                latest_draft = cur.fetchone()
+                if latest_draft:
+                    draft_id = latest_draft["comm_id"]
+                    recipient = latest_draft["recipient"]
+                    subject = latest_draft["subject"]
+                    body = latest_draft["body"]
+            conn.close()
+
+            # Intelligent synthesis if new email without explicit quotes
+            if not draft_id:
+                has_explicit_quotes = ('"' in clean_msg or "'" in clean_msg) and "subject" in lower_msg and "body" in lower_msg
+                if not has_explicit_quotes:
+                    int_sub, int_body = self._compose_intelligent_email(clean_msg, recipient, identity)
+                    subject = int_sub
+                    body = int_body
+
+            send_params = {
+                "recipient": recipient,
+                "subject": subject,
+                "body": body
+            }
+            if draft_id:
+                send_params["draft_id"] = draft_id
+
+            tool_res = mcp_registry.execute_tool("send_email", send_params, identity)
             if tool_res.get("status") == "permission_denied":
-                return permission_denied_response(tool_res, "send_email", parsed)
+                return permission_denied_response(tool_res, "send_email", send_params)
+
             ans = (
                 f"✉️ **Email Sent Successfully**\n\n"
                 f"• **Channel:** {tool_res.get('channel', 'Microsoft Outlook')}\n"
@@ -434,13 +614,13 @@ class FoundryAgentService:
                 f"• **Subject:** **{tool_res['subject']}**\n"
                 f"• **Message ID:** `{tool_res['comm_id']}`\n"
                 f"• **Timestamp:** {tool_res['timestamp']}\n\n"
-                f"💡 *This message has been dispatched and is visible in your **Sent Items** folder in Outlook.*"
+                f"💡 *This message has been dispatched and is visible in your **Sent Items** in the Email section.*"
             )
             return ChatResponse(
                 answer=ans,
                 conversation_id=conversation_id,
                 sources=[],
-                tool_calls=[ToolCallResult(tool_name="send_email", parameters=parsed, result=tool_res)],
+                tool_calls=[ToolCallResult(tool_name="send_email", parameters=send_params, result=tool_res)],
                 mode="azure_foundry" if self.is_azure_ready else "local_sandbox",
                 language=language,
                 authenticated_user=identity.model_dump()
@@ -451,33 +631,51 @@ class FoundryAgentService:
             "draft email", "draft an email", "draft a mail", "draft mail", "draft the email",
             "save draft", "save a draft", "save the draft", "save an email draft", "save email draft", "save the email draft",
             "save draft of email", "save the draft of the email", "save a draft of the email", "save a draft of email",
+            "save mail", "save the mail", "save email", "save this draft", "save as draft", "store draft",
             "compose email", "compose an email", "compose draft", "compose a draft", "compose a mail",
             "create draft", "create a draft", "create an email draft", "make a draft", "prepare draft", "prepare email"
         ]) or (
-            ("draft" in lower_msg or "compose" in lower_msg) and ("email" in lower_msg or "mail" in lower_msg)
+            ("draft" in lower_msg or "compose" in lower_msg or "save" in lower_msg) and ("email" in lower_msg or "mail" in lower_msg)
         )
 
         if is_draft_email:
             parsed = parse_email_intent(clean_msg)
-            tool_res = mcp_registry.execute_tool(
-                "draft_email",
-                {"recipient": parsed["recipient"], "subject": parsed["subject"], "body": parsed["body"]},
-                identity
-            )
+            draft_id = parsed.get("draft_id")
+            recipient = parsed["recipient"]
+            subject = parsed["subject"]
+            body = parsed["body"]
+
+            if not draft_id:
+                has_explicit_quotes = ('"' in clean_msg or "'" in clean_msg) and "subject" in lower_msg and "body" in lower_msg
+                if not has_explicit_quotes:
+                    int_sub, int_body = self._compose_intelligent_email(clean_msg, recipient, identity)
+                    subject = int_sub
+                    body = int_body
+
+            draft_params = {
+                "recipient": recipient,
+                "subject": subject,
+                "body": body
+            }
+            if draft_id:
+                draft_params["draft_id"] = draft_id
+
+            tool_res = mcp_registry.execute_tool("draft_email", draft_params, identity)
             if tool_res.get("status") == "permission_denied":
-                return permission_denied_response(tool_res, "draft_email", parsed)
+                return permission_denied_response(tool_res, "draft_email", draft_params)
+
             ans = (
                 f"📝 **Email Draft Saved**: Stored draft `{tool_res['draft_id']}` in your **Microsoft Outlook Drafts**.\n\n"
                 f"• **To:** `{tool_res['to']}`\n"
                 f"• **Subject:** **{tool_res['subject']}**\n"
                 f"• **Preview:** *{tool_res['body'][:120]}...*\n\n"
-                f"💡 *You can review and send this anytime from the **Outlook** tab in the sidebar or by saying: `Send draft {tool_res['draft_id']}`.*"
+                f"💡 *This draft is now saved and visible in the **Email** section under **Drafts**.*"
             )
             return ChatResponse(
                 answer=ans,
                 conversation_id=conversation_id,
                 sources=[],
-                tool_calls=[ToolCallResult(tool_name="draft_email", parameters=parsed, result=tool_res)],
+                tool_calls=[ToolCallResult(tool_name="draft_email", parameters=draft_params, result=tool_res)],
                 mode="azure_foundry" if self.is_azure_ready else "local_sandbox",
                 language=language,
                 authenticated_user=identity.model_dump()
@@ -675,11 +873,36 @@ class FoundryAgentService:
         retrieved_chunks = knowledge_base.search_knowledge(
             query=search_q,
             top_k=3,
-            session_file_id=session_file_id
+            session_file_id=session_file_id,
+            user_role=identity.role
         )
 
-        # 10. Hallucination prevention / rejection check
-        unsupported_topics = ["company car", "car policy", "pet policy", "dog in office", "crypto", "bitcoin", "stock option", "equity grant"]
+        # 10. Role-based clearance check and hallucination prevention
+        if not retrieved_chunks:
+            # Check if this topic exists in an elevated enterprise tier not authorized for this role
+            unfiltered_hits = knowledge_base.search_knowledge(
+                query=search_q,
+                top_k=1,
+                session_file_id=session_file_id,
+                user_role=None
+            )
+            if unfiltered_hits and unfiltered_hits[0]["score"] >= 0.18:
+                restricted_doc = unfiltered_hits[0]["source"]
+                return ChatResponse(
+                    answer=(
+                        f"🔒 **Access Restricted by Role-Based Access Control (RBAC)**\n\n"
+                        f"The requested information resides in **{restricted_doc}**, which is not authorized for your current role clearance (**{identity.role}**).\n\n"
+                        f"In accordance with NovaTech Zero-Trust data governance policies, access to elevated departmental records is restricted to authorized roles."
+                    ),
+                    conversation_id=conversation_id,
+                    sources=[],
+                    tool_calls=[],
+                    mode="azure_foundry" if self.is_azure_ready else "local_sandbox",
+                    language=language,
+                    authenticated_user=identity.model_dump()
+                )
+
+        unsupported_topics = ["company car", "car policy", "pet policy", "dog in office", "crypto", "bitcoin"]
         if any(topic in lower_msg for topic in unsupported_topics) or (retrieved_chunks and retrieved_chunks[0]["score"] < 0.12):
             topic_name = "this topic"
             if "car" in lower_msg:
@@ -716,6 +939,182 @@ class FoundryAgentService:
             language=language,
             authenticated_user=identity.model_dump()
         )
+
+    def _compose_intelligent_email(self, prompt: str, recipient_email: str, identity: IdentityContext) -> tuple:
+        """
+        Intelligently synthesizes a polished, executive-ready corporate email.
+        Transforms casual or terse requests into professional emails with a clear subject,
+        proper greeting, structured body paragraphs, and formal sign-off.
+        """
+        # Determine recipient's friendly first name
+        recipient_name = "Colleague"
+        clean_target = recipient_email.split("@")[0]
+        if "." in clean_target:
+            recipient_name = clean_target.split(".")[0].capitalize()
+        elif clean_target.lower() in ["team", "all-staff"]:
+            recipient_name = "Team"
+        elif clean_target.lower() == "it-support":
+            recipient_name = "IT Support Team"
+        elif clean_target:
+            recipient_name = clean_target.capitalize()
+
+        # Try Azure OpenAI / Foundry LLM first if available
+        if self.openai_client:
+            try:
+                system_prompt = (
+                    "You are KnoQuest, the enterprise AI executive assistant for NovaTech Solutions.\n"
+                    "Your task is to compose a polished, professional, concise corporate email based on the user's intent.\n"
+                    "OUTPUT REQUIREMENTS:\n"
+                    "- Return ONLY a valid JSON object with exactly two keys: 'subject' and 'body'.\n"
+                    "- Do NOT output any markdown backticks, code blocks, or explanatory preamble.\n"
+                    "- 'subject': A professional, executive-grade subject line (3 to 8 words).\n"
+                    "- 'body': A well-structured corporate email including:\n"
+                    "    • Formal salutation (e.g., 'Hi Sarah,')\n"
+                    "    • 1-2 well-crafted, polite paragraphs stating the context, specifics, and actionable next steps\n"
+                    "    • Courteous closing line and professional sign-off with the sender's name and title.\n"
+                    "- NEVER include user meta-commands like 'send email to' or 'draft an email saying'."
+                )
+                user_prompt = (
+                    f"Sender: {identity.name} ({identity.designation}, {identity.department})\n"
+                    f"Recipient: {recipient_name} <{recipient_email}>\n"
+                    f"User Prompt: {prompt}"
+                )
+                resp = self.openai_client.chat.completions.create(
+                    model=settings.AZURE_MODEL_DEPLOYMENT_NAME,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    temperature=0.2,
+                    max_tokens=500
+                )
+                raw_json = resp.choices[0].message.content.strip()
+                raw_json = re.sub(r'^```(?:json)?\s*', '', raw_json)
+                raw_json = re.sub(r'\s*```$', '', raw_json)
+                data = json.loads(raw_json)
+                if data.get("subject") and data.get("body"):
+                    return data["subject"].strip(), data["body"].strip()
+            except Exception as e:
+                logger.warning(f"LLM email generation fallback: {e}")
+
+        # Resilient Intelligent Local Synthesizer
+        # 1. Clean out command prefixes
+        stripped = prompt
+        pfx_list = [
+            r'^(?:please\s+)?(?:send|draft|compose|write|create|save)(?:\s+an|\s+the|\s+a)?\s+(?:email|mail|draft|message)\s+(?:to\s+[\w\.-]+@[\w\.-]+\.\w+|\w+)?\s*(?:with\s+subject\s*["\'][^"\']+["\']|regarding\s+[^:\n]+|about\s+[^:\n]+)?\s*(?:saying|that|body:?|message:?|:)?\s*',
+            r'^(?:to:\s*[\w\.-]+@[\w\.-]+\.\w+[,;\s]*)',
+            r'^(?:save\s+(?:the\s+)?draft(?:\s+of\s+email)?(?:\s+to\s+[\w\.-]+@[\w\.-]+\.\w+)?\s*)'
+        ]
+        for pfx in pfx_list:
+            stripped = re.sub(pfx, '', stripped, flags=re.IGNORECASE).strip()
+
+        # Remove trailing/leading quotes or colons
+        stripped = stripped.strip(" :,\"'")
+
+        # 2. Derive Subject
+        lower_p = prompt.lower()
+        if "delay" in lower_p or "vendor" in lower_p or "postpone" in lower_p:
+            subject = "Project Timeline Update: Vendor Delivery Schedule"
+        elif "architecture" in lower_p or "design review" in lower_p:
+            subject = "Architecture Review & Technical Sync"
+        elif "budget" in lower_p or "headcount" in lower_p or "financial" in lower_p:
+            subject = "Quarterly Budget & Resource Allocation Planning"
+        elif "leave" in lower_p or "vacation" in lower_p or "pto" in lower_p:
+            subject = "Upcoming Leave Notice & Team Coverage Plan"
+        elif "incident" in lower_p or "security" in lower_p or "vulnerability" in lower_p:
+            subject = "Security Advisory & Urgent Action Notice"
+        elif "sync" in lower_p or "meeting" in lower_p:
+            subject = "Team Alignment & Operational Sync"
+        elif "approval" in lower_p:
+            subject = "Request for Expedited Review and Approval"
+        else:
+            words = [w for w in re.findall(r'\b[a-zA-Z0-9]{3,}\b', stripped) if w.lower() not in ["send", "mail", "email", "draft", "please", "with", "about", "that", "this"]]
+            subject = " ".join(words[:5]).title() if words else "Enterprise Operational Update"
+
+        # 3. Derive clean message body
+        core_msg = stripped if len(stripped) > 5 else f"Please find the latest update regarding {subject}."
+        core_msg = core_msg[0].upper() + core_msg[1:] if len(core_msg) > 1 else core_msg
+
+        body = (
+            f"Hi {recipient_name},\n\n"
+            f"I wanted to reach out regarding our ongoing operational milestones.\n\n"
+            f"{core_msg}\n\n"
+            f"Please let me know if you have any questions or require additional details. We can also schedule a brief follow-up sync if helpful.\n\n"
+            f"Best regards,\n"
+            f"{identity.name}\n"
+            f"{identity.designation}\n"
+            f"NovaTech Solutions"
+        )
+
+        return subject, body
+
+    def _structure_intelligent_ticket(self, prompt: str) -> tuple:
+        """
+        Structures raw user complaints into clean technical IT helpdesk tickets
+        with appropriate priority ('Low' | 'Medium' | 'High' | 'Critical').
+        """
+        lower_p = prompt.lower()
+
+        # Priority inference
+        if any(w in lower_p for w in ["critical", "outage", "production down", "security breach", "data leak", "data loss", "ransomware"]):
+            priority = "Critical"
+        elif any(w in lower_p for w in ["urgent", "blocker", "cannot work", "can't work", "broken", "flicker", "flickering", "crashes", "crashing", "blue screen"]):
+            priority = "High"
+        elif any(w in lower_p for w in ["minor", "cosmetic", "accessory", "mouse pad", "keyboard layout", "low"]):
+            priority = "Low"
+        else:
+            priority = "Medium"
+
+        # Title inference
+        if "flicker" in lower_p or "hdmi" in lower_p or "monitor" in lower_p or "screen" in lower_p:
+            title = "Hardware Display: External Screen Connection & Flickering Issue"
+        elif "vpn" in lower_p or "network" in lower_p or "wifi" in lower_p or "internet" in lower_p:
+            title = "Network Connectivity: Corporate VPN & Remote Access Disruption"
+        elif "password" in lower_p or "mfa" in lower_p or "login" in lower_p or "authenticate" in lower_p:
+            title = "Access & Identity: Single Sign-On / MFA Verification Support"
+        elif "laptop" in lower_p or "battery" in lower_p or "reboot" in lower_p or "power" in lower_p:
+            title = "Hardware Provisioning: Device Power & System Diagnostics"
+        elif "software" in lower_p or "license" in lower_p or "install" in lower_p or "download" in lower_p:
+            title = "Software Management: Application License & Installation Request"
+        else:
+            clean = re.sub(r'^(?:please\s+)?(?:create|raise|open|log)\s+(?:an?\s+)?(?:it\s+)?ticket\s*(?:for|about|regarding|because)?\s*', '', prompt, flags=re.IGNORECASE).strip()
+            words = [w for w in re.findall(r'\b[a-zA-Z0-9]{3,}\b', clean) if w.lower() not in ["ticket", "please", "help", "need", "with"]]
+            title = " ".join(words[:6]).title() if words else "General IT Support & Diagnostics Request"
+
+        return title, priority
+
+    def _structure_intelligent_meeting(self, prompt: str, default_title: str) -> str:
+        """Derives clean, executive meeting titles from casual scheduling prompts while preserving explicit topics."""
+        lower_p = prompt.lower()
+        lower_dt = (default_title or "").lower()
+
+        # Check if default_title is raw prompt text containing dates, times, or prepositions
+        has_time_or_date = bool(re.search(r'\d{4}-\d{2}-\d{2}|\d{1,2}:\d{2}|\b\d{1,2}\s*(?:am|pm)\b|\bfrom\s+\d+|\bat\s+\d+', lower_dt))
+        is_generic = lower_dt in ["sync", "meeting", "quick sync", "team sync", "discussion", "catch up", ""]
+
+        if not has_time_or_date and not is_generic:
+            return default_title
+
+        if "architecture" in lower_p or "design" in lower_p:
+            return "Architecture Review & Technical Sync"
+        elif "budget" in lower_p or "financial" in lower_p or "headcount" in lower_p:
+            return "Fiscal & Resource Planning Review"
+        elif "sprint" in lower_p or "standup" in lower_p or "retrospective" in lower_p:
+            return "Sprint Planning & Retrospective Sync"
+        elif "security" in lower_p or "audit" in lower_p or "compliance" in lower_p:
+            return "Security Architecture & Compliance Review"
+        elif "1:1" in lower_p or "one on one" in lower_p or "catch up" in lower_p:
+            return "1-on-1 Alignment & Status Sync"
+        elif "hiring" in lower_p or "interview" in lower_p:
+            return "Candidate Evaluation & Hiring Sync"
+        
+        # Strip dates, times, and prepositions from default_title if any remain
+        clean_t = re.sub(r'\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}:\d{2}\b|\b(?:from|to|at|on|with)\b|\b\d{1,2}\s*(?:am|pm)\b', '', default_title, flags=re.IGNORECASE).strip()
+        words = [w for w in re.findall(r'\b[a-zA-Z]{3,}\b', clean_t) if w.lower() not in ["review", "discuss", "meet", "meeting", "sync", "the"]]
+        if words:
+            return f"{' '.join(words[:4]).title()} Discussion"
+
+        return "Enterprise Operational Sync"
 
     def _generate_foundry_grounded_answer(
         self,

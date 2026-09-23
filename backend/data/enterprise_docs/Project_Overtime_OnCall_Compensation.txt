@@ -1,0 +1,16 @@
+NOVATECH PROJECT OVERTIME AND ON-CALL COMPENSATION POLICY
+Document ID: POL-MGT-ONC-2026-V2
+Effective Date: February 1, 2026
+Applicability: Operations Managers, SRE Leads, and Technical Support Supervisors
+Classification: Tier 2 - Management & Leadership (Restricted to Managers & Executives)
+
+SECTION 1: ON-CALL ROTATION AND READINESS
+Engineering and IT operations teams maintaining Tier-0 enterprise production systems participate in weekly rotating on-call rosters. Primary on-call engineers must acknowledge critical P1 incidents within fifteen (15) minutes and P2 incidents within thirty (30) minutes, twenty-four (24) hours a day during their active rotation week.
+
+SECTION 2: ON-CALL STIPENDS AND COMPENSATORY TIME
+1. Standby Stipend: Engineers assigned to primary on-call duty receive a non-discretionary standby stipend of $450 per standard seven-day shift.
+2. Holiday On-Call Differential: Standby shifts during recognized corporate holidays are compensated at an elevated rate of $800 per shift.
+3. Incident Response Overtime: When an active production incident requires more than two (2) hours of active remediation outside standard business hours, the engineer earns compensatory time off (Comp Time) equal to 1.5x the incident duration, with manager approval.
+
+SECTION 3: CONSECUTIVE REST MANDATES
+To ensure engineer well-being, an employee who conducts emergency incident troubleshooting between midnight and 6:00 AM is entitled to a mandatory 8-hour uninterrupted rest period before resuming active work duties.

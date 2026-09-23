@@ -1,0 +1,20 @@
+NOVATECH EXECUTIVE COMPENSATION BENCHMARKS AND SALARY GRIDS
+Document ID: CONF-HR-EXEC-COMP-2026-V1
+Effective Date: January 1, 2026
+Applicability: Corporate HR Leadership, Compensation Committee of the Board
+Classification: Tier 3 - Human Resources Confidential (Restricted to HR & Executive Admin)
+
+SECTION 1: C-SUITE AND SENIOR VP COMPENSATION TIERS
+This document contains proprietary executive compensation benchmarks formulated by external advisors (Mercer & Radford). Access is strictly restricted to Human Resources Executive Leadership and the Board Compensation Committee.
+
+1. Chief Executive Officer (CEO): Base Salary: $425,000 | Target Annual Bonus: 80% ($340,000) | Annual Equity Refresh: $1,200,000 (RSU/PSU 50/50 mix).
+2. Chief Financial Officer (CFO): Base Salary: $320,000 | Target Annual Bonus: 60% ($192,000) | Annual Equity Refresh: $600,000.
+3. Chief Technology Officer (CTO): Base Salary: $340,000 | Target Annual Bonus: 60% ($204,000) | Annual Equity Refresh: $750,000.
+4. Vice President, People & HR (Sarah Jenkins - EMP003): Base Salary: $235,000 | Target Annual Bonus: 40% ($94,000) | Annual Equity Refresh: $280,000.
+5. Chief Information Security Officer (David Kumar - EMP005): Base Salary: $255,000 | Target Annual Bonus: 45% ($114,750) | Annual Equity Refresh: $320,000.
+
+SECTION 2: LONG-TERM INCENTIVE PLAN (LTIP) VESTING SCHEDULE
+Executive equity awards vest on a four-year schedule with a one-year cliff (25% vesting after 12 months, followed by 6.25% quarterly vesting thereafter). Performance Share Units (PSUs) are tied to 3-year Total Shareholder Return (TSR) metrics and recurring SaaS annual growth targets.
+
+SECTION 3: SEVERANCE AND GOLDEN PARACHUTE PROVISIONS
+Executive employment agreements stipulate twelve (12) months base salary continuation, accelerated single-trigger equity vesting of 50% upon a Change of Control event, and 18 months of executive COBRA healthcare coverage.

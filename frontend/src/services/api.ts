@@ -1,8 +1,14 @@
 import type { HealthStatus, UploadedFile, EmployeePersona, AdminEmployeeDetail, LoginResponse } from '../types/chat';
 
-const API_BASE_URL = typeof window !== 'undefined' && window.location.hostname
-  ? `http://${window.location.hostname}:8000`
-  : 'http://localhost:8000';
+const envApiUrl = (import.meta as any).env?.VITE_API_URL || (import.meta as any).env?.VITE_API_BASE_URL;
+
+const API_BASE_URL = (
+  envApiUrl
+    ? envApiUrl.replace(/\/$/, '')
+    : (typeof window !== 'undefined' && window.location.hostname
+        ? `http://${window.location.hostname}:8000`
+        : 'http://localhost:8000')
+);
 
 let onUnauthorizedCallback: (() => void) | null = null;
 
@@ -208,6 +214,19 @@ export async function listTickets(): Promise<{ tickets: any[] }> {
   return res.json();
 }
 
+export async function updateTicketStatus(ticketId: string, status: string): Promise<any> {
+  const res = await apiFetch(`/api/tools/tickets/${ticketId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to update ticket status');
+  }
+  return res.json();
+}
+
 export async function searchDirectory(q: string = ''): Promise<{ employees: any[] }> {
   const res = await apiFetch(`/api/tools/directory?q=${encodeURIComponent(q)}`);
   if (!res.ok) {
@@ -361,6 +380,17 @@ export async function bookMeeting(payload: { title: string; start_time: string; 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail || 'Failed to book meeting');
+  }
+  return res.json();
+}
+
+export async function deleteMeeting(eventId: string) {
+  const res = await apiFetch(`/api/tools/calendar/${encodeURIComponent(eventId)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to cancel meeting');
   }
   return res.json();
 }

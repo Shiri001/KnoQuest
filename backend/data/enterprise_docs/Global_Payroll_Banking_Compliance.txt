@@ -1,0 +1,16 @@
+NOVATECH GLOBAL PAYROLL, WIRE DISBURSEMENT, AND TAX COMPLIANCE
+Document ID: CONF-HR-PAY-2026-V2
+Effective Date: January 1, 2026
+Applicability: Corporate Payroll Team, Treasury, and HR Operations
+Classification: Tier 3 - Human Resources Confidential (Restricted to HR & Executive Admin)
+
+SECTION 1: MULTI-COUNTRY PAYROLL DISBURSEMENT TIMETABLE
+NovaTech executes semi-monthly payroll cycles for US and Canadian personnel (disbursed on the 15th and last business day of each month) and monthly payroll cycles for European and APAC subsidiaries (disbursed on the 26th of each month). Direct deposit ACH and SEPA wire batches must be submitted by 12:00 PM EST forty-eight hours prior to value date.
+
+SECTION 2: DUAL-CONTROL WIRE AUTHORIZATION THRESHOLDS
+To prevent corporate treasury fraud and unauthorized salary inflation:
+1. Payroll disbursement files under $500,000 require authorization by the Payroll Manager and Assistant Controller.
+2. Payroll disbursement batches exceeding $500,000 require dual biometric token sign-off from the Vice President of HR and Chief Financial Officer.
+
+SECTION 3: STATUTORY WITHHOLDING AND TAX RECONCILIATION
+All federal, state, provincial, and national statutory taxes (FICA, Medicare, Federal Income Tax, state disability, and local municipality withholdings) are reconciled bi-weekly with ADP GlobalView and RemitOnline. Quarterly 941 filings and year-end W-2 / T4 tax documentation are submitted directly to government revenue authorities.

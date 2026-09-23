@@ -1,0 +1,14 @@
+NOVATECH ANNUAL DIVERSITY, EQUITY, AND PAY PARITY STATISTICAL AUDIT
+Document ID: CONF-HR-DEI-2026-V1
+Effective Date: January 20, 2026
+Applicability: HR Executive Leadership, Chief Diversity Officer, Board Nominating Committee
+Classification: Tier 3 - Human Resources Confidential (Restricted to HR & Executive Admin)
+
+SECTION 1: GLOBAL WORKFORCE DEMOGRAPHIC BREAKDOWN
+As of Q4 2025, NovaTech employs 842 full-time personnel globally across North America (68%), EMEA (22%), and APAC (10%). Gender distribution across all technical engineering disciplines is 34% female and 66% male; senior leadership positions (Director level and above) reflect 38% female representation.
+
+SECTION 2: PAY PARITY AND EQUAL COMPENSATION ANALYSIS
+An independent statistical regression audit conducted by BDO Consulting revealed an adjusted pay gap of 0.8% across equivalent job levels and experience cohorts, well within the target industry benchmark of <1.5%. A remedial equity adjustment pool of $140,000 has been earmarked for FY26 Q1 to eliminate identified anomalies in mid-level software engineering cohorts.
+
+SECTION 3: TALENT RETENTION AND SUCCESSION PLANNING
+Voluntary turnover in FY25 stood at 7.4% (industry median: 11.2%). Retention among top-quartile Box 9 talent exceeded 94%. Succession pipelines have been identified for 85% of mission-critical VP and C-suite roles with primary and emergency interim successors designated.

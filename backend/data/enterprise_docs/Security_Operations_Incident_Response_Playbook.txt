@@ -1,0 +1,19 @@
+NOVATECH SECURITY OPERATIONS CENTER (SOC) INCIDENT RESPONSE PLAYBOOK
+Document ID: CONF-IT-SOC-2026-V2
+Effective Date: February 15, 2026
+Applicability: SOC Analysts, Incident Commanders, Security Engineering
+Classification: Tier 4 - IT & InfoSec Confidential (Restricted to IT & Executive Admin)
+
+SECTION 1: SECURITY ALERT SEVERITY MATRIX
+- Severity P1 (Critical Breach): Confirmed unauthorized exfiltration of customer PII, active ransomware detonation, or compromised root cloud credentials. Response SLA: Immediate engagement (<10 minutes).
+- Severity P2 (Major Incident): High-privilege credential stuffing, lateral movement detected on internal network, or DDoS disruption on customer-facing APIs. Response SLA: 30 minutes.
+- Severity P3 (Moderate Anomaly): Suspicious login from unsanctioned geography, multiple failed MFA prompts, or malware quarantined on employee endpoint. Response SLA: 4 hours.
+
+SECTION 2: RANSOMWARE AND NETWORK ISOLATION PLAYBOOK
+Upon detecting unauthorized disk encryption activity or beaconing to known Command & Control (C2) IPs:
+1. Automated Host Quarantine: CrowdStrike Falcon isolates the compromised endpoint from the network instantly while maintaining forensic telemetry.
+2. Token Revocation: Active Azure AD / Entra ID session tokens for affected identities are revoked using Microsoft Graph API bulk logout.
+3. Network Egress Severing: Firewall engineers sever external Internet gateway routes for the affected subnet.
+
+SECTION 3: FORENSIC EVIDENCE CHAIN-OF-CUSTODY
+Volatile memory dumps (RAM), firewall packet captures, and kernel audit logs must be cryptographically hashed (SHA-256) and signed before handoff to federal cybercrime authorities or external incident forensics retainers (Mandiant).

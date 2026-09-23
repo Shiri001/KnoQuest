@@ -1,0 +1,18 @@
+NOVATECH INTELLECTUAL PROPERTY AND NON-DISCLOSURE POLICY
+Document ID: POL-IPN-2026-V4
+Effective Date: January 15, 2026
+Applicability: All Personnel, Engineering Staff, Contractors, and Researchers
+Classification: Tier 1 - General Enterprise (All Staff)
+
+SECTION 1: OWNERSHIP OF INVENTIONS AND WORK PRODUCT
+All software source code, architectural designs, algorithms, machine learning model weights, patents, trade secrets, research documentation, and copyrightable creations conceived, authored, or reduced to practice by employees within the scope of employment or using NovaTech computing resources are the sole and exclusive property of NovaTech Solutions Inc. ("Work Made for Hire").
+
+SECTION 2: PROPRIETARY INFORMATION AND TRADE SECRETS
+Employees must protect all confidential and proprietary business information ("Confidential Information"), including client lists, product roadmaps, pricing schedules, neural network datasets, and internal security credentials. Confidential Information must never be transmitted over unencrypted public channels, posted to online forums, or copied onto personal removable media.
+
+SECTION 3: OPEN SOURCE SOFTWARE (OSS) UTILIZATION
+1. Permitted Licenses: Software engineers may incorporate permissive open-source libraries (MIT, Apache 2.0, BSD 2/3-Clause) subject to dependency security scanning via automated CI/CD pipeline checks.
+2. Prohibited Licenses: The introduction of viral copyleft licenses (GPLv2, GPLv3, AGPL) into proprietary NovaTech commercial SaaS repositories is strictly prohibited without written authorization from the Open Source Review Board (OSRB).
+
+SECTION 4: POST-EMPLOYMENT RESTRICTIONS
+The obligation to preserve the confidentiality of NovaTech trade secrets, customer records, and proprietary engineering designs continues indefinitely following the separation of employment. Departing employees must surrender all company laptops, security fobs, cryptographic hardware keys, and backup media prior to their final severance disbursement.

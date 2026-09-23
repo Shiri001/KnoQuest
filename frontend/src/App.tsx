@@ -434,6 +434,7 @@ export const App: React.FC = () => {
       {/* 3. Knowledge & Documents View */}
       {currentView === 'documents' && (
         <DocumentsView
+          currentUser={currentUser || undefined}
           onAskAboutPolicy={(title) =>
             handleSendMessage(`What are the key guidelines and rules outlined in the ${title} document?`)
           }

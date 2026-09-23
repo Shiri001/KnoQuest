@@ -206,6 +206,78 @@ def handle_get_my_calendar(identity: IdentityContext, params: Dict[str, Any]) ->
         "events": rows
     }
 
+def parse_dt_str(val: str) -> Optional[datetime]:
+    if not val:
+        return None
+    val = val.strip()
+    formats = [
+        "%Y-%m-%d %H:%M",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%dT%H:%M",
+        "%Y-%m-%d"
+    ]
+    for fmt in formats:
+        try:
+            return datetime.strptime(val, fmt)
+        except ValueError:
+            continue
+    return None
+
+def check_time_frame_conflict(
+    conn,
+    company_id: str,
+    new_start_dt: datetime,
+    new_end_dt: datetime,
+    participants: List[str],
+    exclude_event_id: Optional[str] = None
+) -> Optional[Dict[str, Any]]:
+    """
+    Checks if any existing meeting for the company conflicts with the requested time frame.
+    An overlap occurs if: new_start < existing_end AND new_end > existing_start
+    and at least one participant (organizer or attendee) is shared.
+    """
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT event_id, employee_id, title, start_time, end_time, attendees, location
+        FROM calendar_events
+        WHERE company_id = ?
+    """, (company_id,))
+    rows = cursor.fetchall()
+    
+    clean_participants = {p.strip().lower() for p in participants if p and p.strip()}
+    
+    for row in rows:
+        row_dict = dict(row)
+        if exclude_event_id and row_dict["event_id"] == exclude_event_id:
+            continue
+            
+        e_start = parse_dt_str(row_dict["start_time"])
+        e_end = parse_dt_str(row_dict["end_time"])
+        if not e_start:
+            continue
+        if not e_end:
+            e_end = e_start + timedelta(minutes=30)
+            
+        # Overlap condition: startA < endB AND endA > startB
+        if new_start_dt < e_end and new_end_dt > e_start:
+            # Check shared participants
+            existing_attendees = [a.strip().lower() for a in re.split(r'[,;]\s*', row_dict.get("attendees") or "")]
+            existing_participants = set(existing_attendees)
+            if row_dict.get("employee_id"):
+                existing_participants.add(row_dict["employee_id"].strip().lower())
+                
+            shared = clean_participants.intersection(existing_participants)
+            if shared:
+                return {
+                    "event_id": row_dict["event_id"],
+                    "title": row_dict["title"],
+                    "start_time": row_dict["start_time"],
+                    "end_time": row_dict["end_time"],
+                    "shared_participants": list(shared)
+                }
+    return None
+
 def handle_schedule_meeting(identity: IdentityContext, params: Dict[str, Any]) -> Dict[str, Any]:
     title = params.get("title", "Sync Meeting")
     start_time = params.get("start_time", "2026-09-22 10:00")
@@ -214,14 +286,66 @@ def handle_schedule_meeting(identity: IdentityContext, params: Dict[str, Any]) -
     location = params.get("location", "Microsoft Teams (Virtual)")
     description = params.get("description", "")
 
-    event_id = f"EVT-{random.randint(300, 999)}"
+    # Parse and validate datetimes
+    start_dt = parse_dt_str(start_time)
+    if not start_dt:
+        return {
+            "status": "error",
+            "error": "INVALID_DATETIME",
+            "message": f"Invalid start_time format '{start_time}'. Expected YYYY-MM-DD HH:MM."
+        }
+    
+    end_dt = parse_dt_str(end_time)
+    if not end_dt:
+        end_dt = start_dt + timedelta(minutes=30)
+        end_time = end_dt.strftime("%Y-%m-%d %H:%M")
+
+    if end_dt <= start_dt:
+        return {
+            "status": "error",
+            "error": "INVALID_TIME_FRAME",
+            "message": "Invalid meeting time frame: End time must be strictly after start time."
+        }
+
+    # Normalize formatted strings
+    start_time_str = start_dt.strftime("%Y-%m-%d %H:%M")
+    end_time_str = end_dt.strftime("%Y-%m-%d %H:%M")
+
+    # Gather participants
+    attendee_emails = [a.strip() for a in re.split(r'[,;]\s*', attendees) if a.strip()]
+    participants = list(set([identity.employee_id, identity.email] + attendee_emails))
 
     conn = get_db_connection()
+
+    # Time frame conflict check - prevent overriding already set time slots
+    conflict = check_time_frame_conflict(
+        conn=conn,
+        company_id=identity.company_id,
+        new_start_dt=start_dt,
+        new_end_dt=end_dt,
+        participants=participants
+    )
+
+    if conflict:
+        conn.close()
+        shared_str = ", ".join(conflict["shared_participants"])
+        return {
+            "status": "conflict",
+            "error": "SCHEDULING_CONFLICT",
+            "conflicting_event": conflict,
+            "message": (
+                f"Time frame conflict: Participant(s) [{shared_str}] already booked for "
+                f"'{conflict['title']}' from {conflict['start_time']} to {conflict['end_time']}. "
+                f"Existing meeting time frames cannot be overridden."
+            )
+        }
+
+    event_id = f"EVT-{random.randint(300, 999)}"
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO calendar_events (event_id, company_id, employee_id, title, start_time, end_time, attendees, location, description)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
-    """, (event_id, identity.company_id, identity.employee_id, title, start_time, end_time, attendees, location, description))
+    """, (event_id, identity.company_id, identity.employee_id, title, start_time_str, end_time_str, attendees, location, description))
     conn.commit()
     conn.close()
 
@@ -230,11 +354,55 @@ def handle_schedule_meeting(identity: IdentityContext, params: Dict[str, Any]) -
         "event_id": event_id,
         "organizer": identity.name,
         "title": title,
-        "start_time": start_time,
-        "end_time": end_dt_val if (end_dt_val := end_time) else start_time,
+        "start_time": start_time_str,
+        "end_time": end_time_str,
         "attendees": attendees,
         "location": location,
-        "message": f"Meeting '{title}' scheduled successfully for {start_time}."
+        "message": f"Meeting '{title}' scheduled successfully for {start_time_str} - {end_time_str}."
+    }
+
+def handle_delete_meeting(identity: IdentityContext, params: Dict[str, Any]) -> Dict[str, Any]:
+    event_id = params.get("event_id", "").strip()
+    if not event_id:
+        return {"status": "error", "message": "Meeting event_id is required for deletion."}
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT * FROM calendar_events WHERE event_id = ? AND company_id = ?;
+    """, (event_id, identity.company_id))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return {"status": "error", "message": f"Meeting with ID '{event_id}' was not found in your company calendar."}
+
+    event = dict(row)
+    # Authorization: Organizer, Attendee, or Manager/Admin
+    is_organizer = (event["employee_id"] == identity.employee_id)
+    is_attendee = (identity.email.lower() in event.get("attendees", "").lower())
+    is_privileged = (
+        identity.role in ["Manager", "Top Team", "Executive", "IT Specialist", "HR Executive"]
+        or "admin.manage_employees" in identity.permissions
+    )
+
+    if not (is_organizer or is_attendee or is_privileged):
+        conn.close()
+        return {
+            "status": "permission_denied",
+            "message": f"Access Denied: You are not authorized to cancel meeting '{event['title']}'. Only the organizer ({event['employee_id']}) or meeting attendees can cancel this appointment."
+        }
+
+    cursor.execute("DELETE FROM calendar_events WHERE event_id = ? AND company_id = ?;", (event_id, identity.company_id))
+    conn.commit()
+    conn.close()
+
+    return {
+        "status": "deleted",
+        "event_id": event_id,
+        "title": event["title"],
+        "start_time": event["start_time"],
+        "end_time": event["end_time"],
+        "message": f"Meeting '{event['title']}' ({event_id}) has been cancelled and removed from the calendar."
     }
 
 def register():
@@ -264,4 +432,19 @@ def register():
             "required": ["title", "start_time"]
         },
         handler=handle_schedule_meeting
+    )
+
+    mcp_registry.register(
+        name="delete_meeting",
+        description="Cancel and delete a scheduled meeting from the enterprise calendar / Outlook. [Mock Service / SQLite]",
+        category="Calendar",
+        required_permission="calendar.create",
+        parameters_schema={
+            "type": "object",
+            "properties": {
+                "event_id": {"type": "string", "description": "ID of the event to cancel, e.g. EVT-201"}
+            },
+            "required": ["event_id"]
+        },
+        handler=handle_delete_meeting
     )

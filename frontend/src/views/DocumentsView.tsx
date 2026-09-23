@@ -1,41 +1,76 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { ShieldCheck, FileText, UploadCloud, Search } from 'lucide-react';
+import type { EmployeePersona } from '../types/chat';
 import { fetchPolicies } from '../services/api';
 
 interface Policy {
   filename: string;
   title: string;
   category: string;
+  tier?: string;
   length: number;
   summary: string;
   content: string;
 }
 
 interface DocumentsViewProps {
+  currentUser?: EmployeePersona;
   onAskAboutPolicy: (policyTitle: string) => void;
   onOpenUploadModal: () => void;
 }
 
 export const DocumentsView: React.FC<DocumentsViewProps> = ({
+  currentUser,
   onAskAboutPolicy,
   onOpenUploadModal,
 }) => {
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [readingPolicy, setReadingPolicy] = useState<Policy | null>(null);
+  const [meta, setMeta] = useState<{
+    authorizedCount: number;
+    totalCount: number;
+    userRole: string;
+  }>({
+    authorizedCount: 0,
+    totalCount: 32,
+    userRole: currentUser?.role || 'Employee',
+  });
 
   useEffect(() => {
+    setLoading(true);
     fetchPolicies()
-      .then((res) => setPolicies(res.policies || []))
+      .then((res: any) => {
+        const loaded = res.policies || [];
+        setPolicies(loaded);
+        setMeta({
+          authorizedCount: res.authorized_count || loaded.length,
+          totalCount: res.total_enterprise_documents || 32,
+          userRole: res.user_role || currentUser?.role || 'Employee',
+        });
+      })
       .catch((err) => console.error('Failed to load policies:', err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [currentUser?.role, currentUser?.employee_id]);
 
-  const categories = ['All', 'Human Resources', 'Information Technology', 'Finance & Travel', 'Operations & Remote Work'];
+  const categories = useMemo(() => {
+    const cats = new Set<string>();
+    cats.add('All');
+    policies.forEach((p) => {
+      if (p.category) cats.add(p.category);
+    });
+    return Array.from(cats);
+  }, [policies]);
 
   const filtered = policies.filter((p) => {
-    if (selectedCategory === 'All') return true;
-    return p.category === selectedCategory;
+    const matchesCat = selectedCategory === 'All' || p.category === selectedCategory;
+    const matchesSearch = !searchQuery.trim() ||
+      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.summary.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCat && matchesSearch;
   });
 
   return (
@@ -52,34 +87,68 @@ export const DocumentsView: React.FC<DocumentsViewProps> = ({
           className="btn-upload-doc-view"
           onClick={onOpenUploadModal}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
+          <UploadCloud size={16} />
           <span>Upload Custom Document</span>
         </button>
       </div>
 
-      {/* Category Pills */}
-      <div className="docs-category-pills">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            type="button"
-            className={`category-pill ${selectedCategory === cat ? 'active' : ''}`}
-            onClick={() => setSelectedCategory(cat)}
-          >
-            {cat}
-          </button>
-        ))}
+      {/* Role-Based Clearance & Authorization Banner */}
+      <div className="rbac-clearance-bar">
+        <div className="rbac-clearance-info">
+          <ShieldCheck size={20} className="shield-icon" />
+          <div>
+            <div className="rbac-title">
+              Role-Authorized Documents: <strong>{meta.authorizedCount} of {meta.totalCount} Documents Accessible</strong>
+            </div>
+            <div className="rbac-sub">
+              Access Clearance: <strong>{currentUser?.name || 'Active Employee'}</strong> (<span className="rbac-role-pill">{meta.userRole}</span> • {currentUser?.department || 'NovaTech Global'})
+            </div>
+          </div>
+        </div>
+        <div className="rbac-status-tag">
+          <span className="live-indicator"></span>
+          <span>Zero-Trust Role Gating Active</span>
+        </div>
+      </div>
+
+      {/* Search & Category Filter Bar */}
+      <div className="docs-toolbar-row">
+        <div className="docs-search-wrapper">
+          <Search size={15} className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search authorized policies by title or keyword..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button type="button" className="clear-search-btn" onClick={() => setSearchQuery('')}>✕</button>
+          )}
+        </div>
+
+        <div className="docs-category-pills">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              className={`category-pill ${selectedCategory === cat ? 'active' : ''}`}
+              onClick={() => setSelectedCategory(cat)}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Policies Grid */}
       {loading ? (
         <div className="docs-loading">
           <span className="spinner-icon"></span>
-          <span>Indexing enterprise policies...</span>
+          <span>Loading authorized enterprise policies for {meta.userRole}...</span>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="calendar-empty">
+          <p>No authorized documents match your current filter.</p>
         </div>
       ) : (
         <div className="policies-grid">
@@ -87,7 +156,7 @@ export const DocumentsView: React.FC<DocumentsViewProps> = ({
             <div key={pol.filename} className="policy-doc-card">
               <div className="policy-card-top">
                 <span className="policy-cat-badge">{pol.category}</span>
-                <span className="policy-size">{Math.round(pol.length / 100) / 10} KB</span>
+                <span className="policy-tier-badge">{pol.tier ? pol.tier.split(' - ')[0] : 'Tier 1'}</span>
               </div>
               <h3 className="policy-title">{pol.title}</h3>
               <p className="policy-snippet">{pol.summary}</p>
@@ -98,10 +167,7 @@ export const DocumentsView: React.FC<DocumentsViewProps> = ({
                   className="btn-read-doc"
                   onClick={() => setReadingPolicy(pol)}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                  </svg>
+                  <FileText size={14} />
                   <span>Read Full Policy</span>
                 </button>
                 <button
@@ -124,7 +190,7 @@ export const DocumentsView: React.FC<DocumentsViewProps> = ({
             <div className="modal-header">
               <div>
                 <h3>{readingPolicy.title}</h3>
-                <span className="modal-subtext">{readingPolicy.category} • {readingPolicy.filename}</span>
+                <span className="modal-subtext">{readingPolicy.category} • {readingPolicy.tier || 'Authorized'} • {readingPolicy.filename}</span>
               </div>
               <button type="button" className="close-btn" onClick={() => setReadingPolicy(null)}>✕</button>
             </div>

@@ -1,0 +1,19 @@
+NOVATECH DISASTER RECOVERY AND MULTI-REGION FAILOVER PROTOCOL
+Document ID: CONF-IT-DR-2026-V2
+Effective Date: February 1, 2026
+Applicability: SRE Teams, Database Administrators, and Incident Commanders
+Classification: Tier 4 - IT & InfoSec Confidential (Restricted to IT & Executive Admin)
+
+SECTION 1: DISASTER RECOVERY OBJECTIVES AND SLAS
+NovaTech enterprise SaaS applications are certified for Tier-0 high availability with the following strict Service Level Agreements (SLAs):
+- Recovery Point Objective (RPO): Maximum fifteen (15) minutes of committed database transaction data loss.
+- Recovery Time Objective (RTO): Full production service restoration within sixty (60) minutes of declared regional catastrophe.
+
+SECTION 2: AUTOMATED AZURE ACTIVE-PASSIVE FAILOVER SEQUENCE
+In the event of a catastrophic outage in Azure East US 2:
+1. DNS Traffic Steering: Route 53 and Azure Traffic Manager health probes trigger automated DNS failover to the secondary standby region (West US 3) upon three consecutive failed health probes.
+2. Read-Write DB Promotion: The geo-replicated PostgreSQL / SQLite backup cluster in West US 3 is promoted to primary read-write status using the command: `az postgres server failover --resource-group rg-dr-westus3`.
+3. AI Foundry Failover: Azure Foundry endpoints seamlessly switch to the hot-standby cognitive deployment in East US.
+
+SECTION 3: ANNUAL DISASTER SIMULATION TABLETOP EXERCISES
+The IT Infrastructure team conducts mandatory unannounced failover drills twice annually. The most recent drill (completed September 2025) achieved full traffic migration in 38 minutes and 14 seconds with zero loss of transactional integrity.

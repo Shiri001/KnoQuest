@@ -1,0 +1,28 @@
+NOVATECH GLOBAL WHISTLEBLOWER AND ETHICAL REPORTING POLICY
+Document ID: POL-ETH-2026-V2
+Effective Date: February 15, 2026
+Applicability: All Employees, Officers, Board Members, Vendors, and Partners
+Classification: Tier 1 - General Enterprise (All Staff)
+
+SECTION 1: PURPOSE AND ETHICAL MANDATE
+NovaTech is committed to the highest standards of financial transparency, legal integrity, and corporate ethics. This policy provides a secure, confidential, and anonymous mechanism for reporting suspected illegal conduct, accounting fraud, bribery, security compromises, or gross violations of the NovaTech Code of Conduct.
+
+SECTION 2: PROTECTED REPORTABLE CONDUCT
+Reportable misconduct encompasses, but is not limited to:
+- Financial accounting irregularities, embezzlement, or securities non-compliance.
+- Bribery, kickbacks, or commercial corruption under the Foreign Corrupt Practices Act (FCPA).
+- Theft, unauthorized disclosure, or destruction of proprietary source code or intellectual property.
+- Willful violation of data privacy standards (GDPR, CCPA) or IT security protocols.
+- Retaliation against any employee who reports suspected wrongdoing in good faith.
+
+SECTION 3: CONFIDENTIAL REPORTING CHANNELS
+Employees and third parties may submit reports through the following independent channels:
+1. Global Ethics Hotline: +1 (800) 555-NOVA-ETHICS (available 24/7/365 in 14 languages).
+2. Secure Web Portal: https://ethics.novatech.com (operated by an independent third-party intake provider with PGP encrypted transmission and zero IP logging).
+3. Direct Escalation: Confidential written notice to the Chair of the Audit Committee of the Board of Directors or Chief Legal Officer.
+
+SECTION 4: STRICT NON-RETALIATION PLEDGE
+NovaTech strictly prohibits any form of retaliation, adverse employment action, harassment, or compensation penalty against an employee who submits an ethical report in good faith. Any manager or peer found to have engaged in retaliatory behavior will be subject to immediate summary dismissal and potential civil liability.
+
+SECTION 5: INVESTIGATION PROCESS AND BOARD OVERSIGHT
+All hotline reports are assigned to Internal Audit and Outside Legal Counsel within forty-eight (48) hours. Investigation progress reports are delivered directly to the Audit Committee of the Board of Directors on a quarterly basis.

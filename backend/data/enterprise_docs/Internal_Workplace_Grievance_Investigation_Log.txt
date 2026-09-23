@@ -1,0 +1,19 @@
+NOVATECH INTERNAL WORKPLACE GRIEVANCE INVESTIGATION LOG AND DISPUTE RESOLUTION
+Document ID: CONF-HR-GRIEV-2026-V1
+Effective Date: February 10, 2026
+Applicability: HR Employee Relations, Legal Counsel, and People Operations
+Classification: Tier 3 - Human Resources Confidential (Restricted to HR & Executive Admin)
+
+SECTION 1: EMPLOYEE RELATIONS CASE INTAKE AND TRIAGE
+All formal workplace grievances involving harassment, discrimination, manager misconduct, or host-environment disputes are logged in this confidential repository. Cases are classified by severity:
+- Category A (Critical): Formal claims of sexual harassment, racial discrimination, physical threats, or financial retaliation. Must be opened within 4 hours and led by outside legal counsel.
+- Category B (Elevated): Manager interpersonal hostility, unfair performance evaluations, or denial of reasonable disability accommodation. Handled by HRBP within 48 hours.
+- Category C (Operational): Team communication friction or scheduling disputes, handled through informal mediation.
+
+SECTION 2: CONFIDENTIAL CASE SUMMARIES (Q4 2025 - Q1 2026)
+- Case ER-2025-084: Allegation of bias in engineering promotion calibration. Investigation concluded: No policy violation found; manager coached on rubric transparency.
+- Case ER-2025-091: Interpersonal conflict regarding remote work core hours enforcement. Resolution: Mediation completed; hybrid schedule mutually agreed and signed.
+- Case ER-2026-004: Unauthorized sharing of compensation details within Slack channels. Resolution: Verbal warning issued regarding confidentiality standards.
+
+SECTION 3: MANDATORY LEGAL RETENTION
+Investigation notes, witness interview transcripts, forensic email exports, and final resolution letters must be retained under digital legal hold for seven (7) years in encrypted storage.

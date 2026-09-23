@@ -1,0 +1,19 @@
+NOVATECH DEPARTMENTAL DISCRETIONARY BUDGET AND SIGN-OFF POLICY
+Document ID: POL-MGT-BDG-2026-V1
+Effective Date: February 1, 2026
+Applicability: Department Heads, Engineering Leads, and Budget Custodians
+Classification: Tier 2 - Management & Leadership (Restricted to Managers & Executives)
+
+SECTION 1: PURPOSE AND BUDGET ALLOCATION
+Departmental discretionary budgets are allocated at the beginning of each fiscal year to enable managers to fund team-building events, training materials, minor vendor SaaS subscriptions, and emergency local operational purchases.
+
+SECTION 2: SIGN-OFF THRESHOLDS AND DELEGATION OF AUTHORITY
+Discretionary expenditures are governed by the following financial approval matrix:
+- Frontline Team Leads (M1): Purchases up to $1,500 per transaction; maximum monthly aggregate $5,000.
+- Engineering / Functional Directors (M2): Purchases up to $10,000 per transaction; maximum monthly aggregate $30,000.
+- Vice Presidents (M3): Purchases up to $50,000 per transaction.
+- Purchases exceeding $50,000 require formal Purchase Requisition approval from the CFO and Procurement.
+
+SECTION 3: ELIGIBLE AND PROHIBITED EXPENSES
+1. Eligible: Team lunches ($35/person cap), annual offsites ($250/person cap), technical books, certification exam vouchers, conference ticket fees.
+2. Prohibited: First-class travel upgrades, alcoholic beverages exceeding 20% of meal totals, personal electronic devices, or capital equipment items (laptops/servers) which must proceed through Central IT Procurement.

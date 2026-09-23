@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { EmployeePersona } from '../types/chat';
-import { listTickets, createTicket } from '../services/api';
+import { listTickets, createTicket, updateTicketStatus } from '../services/api';
 import { ConfirmationModal } from '../components/common/ConfirmationModal';
 import { ActionFeedbackToast } from '../components/common/ActionFeedbackToast';
 
@@ -23,6 +23,12 @@ export const ITSupportView: React.FC<ITSupportViewProps> = ({ currentUser, onRef
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+
+  // Check if current user is IT Specialist or Admin with resolution rights
+  const isITOrAdmin =
+    currentUser.role === 'IT' ||
+    currentUser.role === 'Admin' ||
+    (currentUser.effective_permissions || []).includes('it.update_ticket');
 
   // Form State
   const [issue, setIssue] = useState('');
@@ -117,9 +123,51 @@ export const ITSupportView: React.FC<ITSupportViewProps> = ({ currentUser, onRef
     }
   };
 
+  const promptResolveTicket = (ticket: Ticket) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Resolve IT Support Ticket',
+      message: `Are you sure you want to mark ticket ${ticket.ticket_id} as Resolved? Once resolved, it will be archived from the active tickets list and the resolved count will increment.`,
+      details: [
+        { label: 'Ticket ID', value: ticket.ticket_id },
+        { label: 'User', value: ticket.user_name },
+        { label: 'Issue', value: ticket.issue },
+        { label: 'Priority', value: ticket.priority },
+      ],
+      confirmText: 'Mark as Resolved',
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        await executeUpdateStatus(ticket.ticket_id, 'Resolved');
+      },
+    });
+  };
+
+  const executeUpdateStatus = async (ticketId: string, newStatus: string) => {
+    setSubmitting(true);
+    try {
+      await updateTicketStatus(ticketId, newStatus);
+      setToast({
+        message: `Ticket ${ticketId} marked as ${newStatus}. Archived from active queue.`,
+        type: 'success',
+        title: 'Ticket Resolved',
+      });
+      await fetchTickets();
+    } catch (err: any) {
+      setToast({
+        message: `Error updating ticket: ${err.message}`,
+        type: 'error',
+        title: 'Update Failed',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const openCount = tickets.filter((t) => t.status === 'Open').length;
   const inProgressCount = tickets.filter((t) => t.status === 'In Progress').length;
   const resolvedCount = tickets.filter((t) => t.status === 'Resolved').length;
+  // Resolved tickets are NOT visible in the active IT tickets tab
+  const activeTickets = tickets.filter((t) => t.status !== 'Resolved');
 
   return (
     <div className="view-page-container it-support-view">
@@ -142,13 +190,11 @@ export const ITSupportView: React.FC<ITSupportViewProps> = ({ currentUser, onRef
         </button>
       </div>
 
-
-
       {/* Metrics Row */}
       <div className="it-metrics-grid">
         <div className="it-metric-card">
-          <span className="metric-num">{tickets.length}</span>
-          <span className="metric-label">Total Tickets</span>
+          <span className="metric-num">{activeTickets.length}</span>
+          <span className="metric-label">Active Tickets</span>
         </div>
         <div className="it-metric-card border-amber">
           <span className="metric-num text-amber">{openCount}</span>
@@ -166,15 +212,38 @@ export const ITSupportView: React.FC<ITSupportViewProps> = ({ currentUser, onRef
 
       {/* Tickets Table */}
       <div className="tickets-table-card">
-        <h3>Enterprise Ticket Registry</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div>
+            <h3 style={{ margin: 0 }}>Active Support Tickets</h3>
+            <span className="subtext" style={{ fontSize: '0.8rem', color: '#94A3B8' }}>
+              Showing active open & in-progress tickets ({activeTickets.length}) • Resolved tickets archived
+            </span>
+          </div>
+          {isITOrAdmin && (
+            <span
+              style={{
+                fontSize: '0.75rem',
+                background: 'rgba(56, 189, 248, 0.12)',
+                color: '#38BDF8',
+                border: '1px solid rgba(56, 189, 248, 0.25)',
+                padding: '0.25rem 0.65rem',
+                borderRadius: '999px',
+                fontWeight: 600,
+              }}
+            >
+              🛡️ IT / Admin Clearance Active
+            </span>
+          )}
+        </div>
+
         {loading ? (
           <div className="table-loading">
             <span className="spinner-icon"></span>
             <span>Fetching IT tickets...</span>
           </div>
-        ) : tickets.length === 0 ? (
+        ) : activeTickets.length === 0 ? (
           <div className="table-empty">
-            <p>No IT tickets recorded in the system.</p>
+            <p>No active IT tickets in the queue. All tickets have been resolved!</p>
           </div>
         ) : (
           <div className="table-responsive">
@@ -188,10 +257,11 @@ export const ITSupportView: React.FC<ITSupportViewProps> = ({ currentUser, onRef
                   <th>Priority</th>
                   <th>Status</th>
                   <th>Date Raised</th>
+                  {isITOrAdmin && <th style={{ textAlign: 'center' }}>Actions</th>}
                 </tr>
               </thead>
               <tbody>
-                {tickets.map((t) => (
+                {activeTickets.map((t) => (
                   <tr key={t.ticket_id}>
                     <td className="mono font-bold text-azure">{t.ticket_id}</td>
                     <td>{t.user_name}</td>
@@ -208,6 +278,36 @@ export const ITSupportView: React.FC<ITSupportViewProps> = ({ currentUser, onRef
                       </span>
                     </td>
                     <td className="text-secondary text-sm">{t.created_at}</td>
+                    {isITOrAdmin && (
+                      <td style={{ textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          className="btn-resolve-ticket"
+                          onClick={() => promptResolveTicket(t)}
+                          disabled={submitting}
+                          title="Resolve and archive this ticket"
+                          style={{
+                            background: 'rgba(16, 185, 129, 0.12)',
+                            border: '1px solid rgba(16, 185, 129, 0.35)',
+                            color: '#34D399',
+                            borderRadius: '6px',
+                            padding: '0.35rem 0.75rem',
+                            fontSize: '0.78rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                          }}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                          <span>Resolve</span>
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

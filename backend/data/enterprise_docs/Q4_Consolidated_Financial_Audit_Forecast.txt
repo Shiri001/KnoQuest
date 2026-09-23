@@ -1,0 +1,17 @@
+NOVATECH CONSOLIDATED FINANCIAL AUDIT, GAAP REVENUE, AND CASH RUNWAY FORECAST
+Document ID: TOP-SECRET-EXEC-FIN-2026-V1
+Effective Date: January 31, 2026
+Applicability: Board Audit Committee, Chief Executive Officer, Chief Financial Officer
+Classification: Tier 5 - Executive & Board Confidential (Restricted to Executive Admin)
+
+SECTION 1: CONSOLIDATED FY25 AUDITED FINANCIAL SUMMARY
+NovaTech closed FY25 with total GAAP revenue of $184,500,000 USD, representing 32% year-over-year growth. Gross margin improved to 76.4% driven by optimizations in Azure AI cognitive infrastructure costs. Non-GAAP Operating Income reached $34,200,000 USD (18.5% operating margin).
+
+SECTION 2: CASH POSITION AND LIQUIDITY RESERVES
+- Cash, Cash Equivalents, and Short-Term Treasury Securities: $142,800,000 USD.
+- Undrawn Revolving Credit Facility (Silicon Valley Bank / First Citizens): $50,000,000 USD.
+- Current burn rate: Net operating cash flow positive ($2.8M monthly operating surplus).
+- Runway Assessment: Unconstrained; operational cash flows fully support planned $95M cash outlay for Project Titan without secondary equity dilution.
+
+SECTION 3: FY26 FINANCIAL GUIDANCE AND BOARD TARGETS
+For FY26, the Board has established target revenues between $235,000,000 and $250,000,000 with targeted EBITDA margins exceeding 22%. Research & Development capital expenditure is budgeted at $48,000,000 to maintain market leadership in autonomous AI workspace solutions.

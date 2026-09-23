@@ -1,0 +1,20 @@
+NOVATECH SOCIAL MEDIA AND PUBLIC COMMUNICATIONS POLICY
+Document ID: POL-COM-2026-V2
+Effective Date: March 1, 2026
+Applicability: All Full-Time, Part-Time, and Contract Employees
+Classification: Tier 1 - General Enterprise (All Staff)
+
+SECTION 1: PURPOSE AND BRAND INTEGRITY
+NovaTech recognizes the value of social networking platforms (LinkedIn, X/Twitter, GitHub, YouTube) for professional networking and technical thought leadership. This policy establishes essential guidelines to safeguard company brand reputation, client confidentiality, and securities disclosure regulations.
+
+SECTION 2: OFFICIAL CORPORATE SPOKESPERSONS
+Only designated corporate executive spokespersons authorized by Corporate Communications and Investor Relations may issue public statements, press releases, or commentary on behalf of NovaTech regarding financial results, product launches, acquisitions, or enterprise legal matters.
+
+SECTION 3: PERSONAL SOCIAL MEDIA CONDUCT
+When discussing technology trends, industry topics, or professional projects on personal social accounts, employees must:
+1. Include a clear disclaimer: "The views and opinions expressed here are my own and do not necessarily represent those of my employer."
+2. Never disclose unannounced software features, internal outage post-mortems, client names, or proprietary code snippets.
+3. Adhere to professional standards; discriminatory remarks, harassment, hate speech, or defamatory statements against competitors or colleagues will trigger HR disciplinary review.
+
+SECTION 4: SPEAKING AT CONFERENCES AND OPEN SOURCE CONTRIBUTIONS
+Employees invited to speak at public technical conferences, webinars, or podcasts where NovaTech affiliation is referenced must submit presentation slide decks to Corporate PR at least ten (10) business days prior to the event for legal and IP clearance.

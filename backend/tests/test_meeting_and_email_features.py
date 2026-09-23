@@ -64,6 +64,13 @@ def test_chatbot_meeting_scheduling_intent():
     identity = resolve_identity("NOVA", "EMP001")
     assert identity is not None
     
+    # Ensure test slot is clean
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM calendar_events WHERE start_time = '2026-09-25 15:00';")
+    conn.commit()
+    conn.close()
+
     res = agent.process_message("Schedule a meeting with David Kumar on 2026-09-25 at 3 PM regarding Zero Trust Security", conversation_id="conv-test-1", identity=identity)
     assert "Calendar Meeting Scheduled" in res.answer
     assert "2026-09-25 15:00" in res.answer
@@ -165,3 +172,121 @@ def test_staff_directory_ask_ai_rich_dossier():
     assert "Key Responsibilities & Areas of Expertise" in res.answer
     assert "HR Policy Leadership" in res.answer
     assert "Quick Actions & Collaboration" in res.answer
+
+def test_meeting_time_frame_overlap_rejection():
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM calendar_events WHERE start_time LIKE '2026-10-15%';")
+    conn.commit()
+    conn.close()
+
+    # 1. Book initial meeting
+    res1 = client.post("/api/tools/calendar/book", json={
+        "title": "Quarterly Budget Review",
+        "start_time": "2026-10-15 10:00",
+        "end_time": "2026-10-15 11:00",
+        "attendees": "rahul.sharma@novatech.com, david.kumar@novatech.com",
+        "location": "Finance Conf Room A"
+    })
+    assert res1.status_code == 200
+    event_id = res1.json()["event_id"]
+
+    # 2. Attempt to book overlapping meeting (10:30 - 11:30) with overlapping participant
+    res_overlap = client.post("/api/tools/calendar/book", json={
+        "title": "Conflicting Architecture Sync",
+        "start_time": "2026-10-15 10:30",
+        "end_time": "2026-10-15 11:30",
+        "attendees": "rahul.sharma@novatech.com",
+        "location": "Virtual Teams"
+    })
+    assert res_overlap.status_code == 409
+    err_msg = res_overlap.json()["detail"]
+    assert "Time frame conflict" in err_msg
+    assert "cannot be overridden" in err_msg
+
+    # 3. Adjacent meeting (11:00 - 12:00) should succeed (no overlap)
+    res_adjacent = client.post("/api/tools/calendar/book", json={
+        "title": "Adjacent Post-Review Sync",
+        "start_time": "2026-10-15 11:00",
+        "end_time": "2026-10-15 12:00",
+        "attendees": "rahul.sharma@novatech.com",
+        "location": "Virtual Teams"
+    })
+    assert res_adjacent.status_code == 200
+
+    # Cleanup
+    client.delete(f"/api/tools/calendar/{event_id}")
+    client.delete(f"/api/tools/calendar/{res_adjacent.json()['event_id']}")
+
+def test_meeting_deletion_flow():
+    # Clean previous
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM calendar_events WHERE start_time LIKE '2026-10-20%';")
+    conn.commit()
+    conn.close()
+
+    # 1. Book a meeting to delete
+    res = client.post("/api/tools/calendar/book", json={
+        "title": "Temporary Standup to Delete",
+        "start_time": "2026-10-20 09:00",
+        "end_time": "2026-10-20 09:30",
+        "attendees": "rahul.sharma@novatech.com",
+        "location": "Virtual"
+    })
+    assert res.status_code == 200
+    event_id = res.json()["event_id"]
+
+    # 2. Verify it shows in calendar
+    cal_res = client.get("/api/tools/calendar")
+    assert any(ev["event_id"] == event_id for ev in cal_res.json()["events"])
+
+    # 3. Delete the meeting
+    del_res = client.delete(f"/api/tools/calendar/{event_id}")
+    assert del_res.status_code == 200
+    assert del_res.json()["status"] == "deleted"
+    assert del_res.json()["event_id"] == event_id
+
+    # 4. Verify it no longer appears in calendar
+    cal_res_after = client.get("/api/tools/calendar")
+    assert not any(ev["event_id"] == event_id for ev in cal_res_after.json()["events"])
+
+    # 5. Second delete should return 404
+    del_again = client.delete(f"/api/tools/calendar/{event_id}")
+    assert del_again.status_code == 404
+
+def test_chatbot_meeting_conflict_response():
+    from backend.app.auth import resolve_identity
+    agent = FoundryAgentService()
+    identity = resolve_identity("NOVA", "EMP001")
+    assert identity is not None
+
+    # Clean test slot
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM calendar_events WHERE start_time LIKE '2026-10-22%';")
+    conn.commit()
+    conn.close()
+
+    # Book a base meeting
+    book_res = client.post("/api/tools/calendar/book", json={
+        "title": "Sprint Planning A",
+        "start_time": "2026-10-22 14:00",
+        "end_time": "2026-10-22 15:00",
+        "attendees": "rahul.sharma@novatech.com",
+        "location": "Room 101"
+    })
+    assert book_res.status_code == 200
+    event_id = book_res.json()["event_id"]
+
+    # Try to schedule via chatbot at conflicting time
+    chat_res = agent.process_message(
+        "Schedule a meeting on 2026-10-22 at 14:30 titled 'Overriding Session'",
+        conversation_id="conv-conflict-test",
+        identity=identity
+    )
+    assert "Scheduling Conflict" in chat_res.answer
+    assert "cannot be overridden" in chat_res.answer
+
+    # Cleanup
+    client.delete(f"/api/tools/calendar/{event_id}")

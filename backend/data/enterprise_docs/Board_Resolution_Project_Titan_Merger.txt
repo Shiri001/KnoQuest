@@ -1,0 +1,17 @@
+NOVATECH BOARD OF DIRECTORS RESOLUTION: ACQUISITION OF CLOUDSCALE AI (PROJECT TITAN)
+Document ID: TOP-SECRET-BOARD-TITAN-2026-V1
+Effective Date: March 10, 2026
+Applicability: Board of Directors and Executive Officers Only (Admin Clearance)
+Classification: Tier 5 - Executive & Board Confidential (Restricted to Executive Admin)
+
+SECTION 1: TRANSACTION TERMS AND VALUATION
+WHEREAS, the Board of Directors of NovaTech Solutions Inc. has reviewed the definitive merger agreement to acquire 100% of the outstanding equity of CloudScale AI Technologies Inc. ("Project Titan") for an aggregate purchase consideration of $145,000,000 USD, consisting of $95,000,000 in cash and $50,000,000 in NovaTech Class A Common Stock.
+
+SECTION 2: STRATEGIC INTELLECTUAL PROPERTY INTEGRATION
+The acquisition secures proprietary multi-agent reasoning models, fifteen (15) granted patents in vector search optimization, and a Tier-1 customer base generating $28,000,000 in annual recurring SaaS revenue (ARR). Key founders will enter into four-year non-compete covenants and non-solicitation agreements.
+
+SECTION 3: REGULATORY APPROVALS AND HART-SCOTT-RODINO (HSR) FILINGS
+Antitrust counsel has submitted pre-merger notifications under the Hart-Scott-Rodino Act to the Federal Trade Commission (FTC) and Department of Justice (DOJ). Anticipated closing date is scheduled for Q3 2026, subject to customary regulatory approvals.
+
+SECTION 4: STRICT CONFIDENTIALITY AND INSIDER TRADING EMBARGO
+All discussions, financial models, and diligence findings regarding Project Titan remain classified under strict SEC Rule 10b-5 insider trading embargoes. Any unauthorized disclosure will trigger immediate executive termination and federal criminal referral.

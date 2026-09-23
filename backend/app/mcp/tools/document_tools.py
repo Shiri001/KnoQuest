@@ -10,7 +10,7 @@ def handle_search_enterprise_documents(identity: IdentityContext, params: Dict[s
     if not query:
         return {"status": "error", "message": "Search query cannot be empty."}
 
-    chunks, citations = knowledge_base.retrieve(query, top_k=top_k)
+    chunks, citations = knowledge_base.retrieve(query, top_k=top_k, user_role=identity.role)
 
     results = []
     for c in chunks:

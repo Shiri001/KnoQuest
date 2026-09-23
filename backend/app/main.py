@@ -29,14 +29,24 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# Enable CORS for React frontend
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origin_list if settings.cors_origin_list else ["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Enable CORS for React frontend (supports local dev and cloud deployments)
+cors_origins = settings.cors_origin_list
+if "*" in cors_origins or not cors_origins or settings.CORS_ORIGINS.strip() == "*":
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex=r".*",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 app.include_router(upload_router)
 app.include_router(speech_router)
@@ -82,6 +92,7 @@ async def list_registered_mcp_tools(identity: IdentityContext = Depends(get_curr
     }
 
 @app.post("/api/tools/ticket", response_model=TicketResponse, tags=["Tools"])
+@app.post("/api/tools/tickets", response_model=TicketResponse, tags=["Tools"])
 async def create_ticket_endpoint(
     request: TicketRequest,
     identity: IdentityContext = Depends(get_current_identity)
@@ -108,6 +119,23 @@ async def list_tickets_endpoint(identity: IdentityContext = Depends(get_current_
         return {"tickets": list_it_tickets(identity.company_id, identity.employee_id)}
     else:
         raise HTTPException(status_code=403, detail="Permission denied: IT ticket viewing permission required.")
+
+@app.patch("/api/tools/tickets/{ticket_id}", tags=["Tools"])
+async def update_ticket_endpoint(
+    ticket_id: str,
+    payload: dict,
+    identity: IdentityContext = Depends(get_current_identity)
+):
+    """Updates IT ticket status or assignment. Requires 'it.update_ticket' permission (IT Specialist or Admin)."""
+    if not check_permission(identity, "it.update_ticket"):
+        raise HTTPException(status_code=403, detail="Permission denied: 'it.update_ticket' required.")
+
+    from .mcp.tools.it_tools import handle_update_it_ticket
+    params = {"ticket_id": ticket_id, **payload}
+    res = handle_update_it_ticket(identity, params)
+    if res.get("status") == "error":
+        raise HTTPException(status_code=404, detail=res["message"])
+    return res
 
 @app.get("/api/tools/directory", tags=["Tools"])
 async def search_directory_endpoint(
@@ -197,7 +225,28 @@ async def book_calendar_endpoint(
     if not check_permission(identity, "calendar.create"):
         raise HTTPException(status_code=403, detail="Permission denied: 'calendar.create' required.")
     from .mcp.tools.calendar_tools import handle_schedule_meeting
-    return handle_schedule_meeting(identity, payload)
+    res = handle_schedule_meeting(identity, payload)
+    if res.get("status") == "conflict":
+        raise HTTPException(status_code=409, detail=res["message"])
+    if res.get("status") == "error":
+        raise HTTPException(status_code=400, detail=res["message"])
+    return res
+
+@app.delete("/api/tools/calendar/{event_id}", tags=["Tools"])
+async def delete_calendar_meeting_endpoint(
+    event_id: str,
+    identity: IdentityContext = Depends(get_current_identity)
+):
+    """Cancel and delete a scheduled calendar meeting."""
+    if not check_permission(identity, "calendar.create"):
+        raise HTTPException(status_code=403, detail="Permission denied: 'calendar.create' required.")
+    from .mcp.tools.calendar_tools import handle_delete_meeting
+    res = handle_delete_meeting(identity, {"event_id": event_id})
+    if res.get("status") == "permission_denied":
+        raise HTTPException(status_code=403, detail=res["message"])
+    if res.get("status") == "error":
+        raise HTTPException(status_code=404, detail=res["message"])
+    return res
 
 @app.get("/api/tools/hr/profile", tags=["Tools"])
 async def get_hr_profile_endpoint(identity: IdentityContext = Depends(get_current_identity)):
@@ -236,38 +285,43 @@ async def request_leave_endpoint(
 
 @app.get("/api/tools/documents/policies", tags=["Tools"])
 async def get_policies_endpoint(identity: IdentityContext = Depends(get_current_identity)):
-    """List loaded enterprise policies with categories."""
+    """List loaded enterprise policies authorized strictly for the authenticated employee's role."""
     if not check_permission(identity, "documents.read"):
         raise HTTPException(status_code=403, detail="Permission denied: 'documents.read' required.")
+    from .knowledge import DOCUMENT_ROLE_ACCESS, is_document_authorized_for_role
     docs_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "enterprise_docs"))
     policies = []
+    total_docs = 0
     if os.path.exists(docs_dir):
-        for fname in sorted(os.listdir(docs_dir)):
-            if fname.endswith(".txt"):
-                fpath = os.path.join(docs_dir, fname)
-                with open(fpath, "r", encoding="utf-8", errors="ignore") as f:
-                    content = f.read()
-                category = "General"
-                lower = fname.lower()
-                if "hr" in lower or "leave" in lower or "benefit" in lower:
-                    category = "Human Resources"
-                elif "it" in lower or "security" in lower or "equipment" in lower:
-                    category = "Information Technology"
-                elif "travel" in lower or "expense" in lower:
-                    category = "Finance & Travel"
-                elif "remote" in lower or "home" in lower:
-                    category = "Operations & Remote Work"
-                
-                title = fname.replace("_", " ").replace(".txt", "")
-                policies.append({
-                    "filename": fname,
-                    "title": title,
-                    "category": category,
-                    "length": len(content),
-                    "summary": content[:300].strip() + ("..." if len(content) > 300 else ""),
-                    "content": content
-                })
-    return {"policies": policies, "count": len(policies)}
+        all_files = sorted([f for f in os.listdir(docs_dir) if f.endswith(".txt")])
+        total_docs = len(all_files)
+        for fname in all_files:
+            # Enforce Zero-Trust RBAC: only return documents authorized for this role
+            if not is_document_authorized_for_role(fname, identity.role):
+                continue
+            fpath = os.path.join(docs_dir, fname)
+            with open(fpath, "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+            meta = DOCUMENT_ROLE_ACCESS.get(fname, {})
+            category = meta.get("category", "General Enterprise")
+            tier = meta.get("tier", "Tier 1 - General Enterprise")
+            title = fname.replace("_", " ").replace(".txt", "")
+            policies.append({
+                "filename": fname,
+                "title": title,
+                "category": category,
+                "tier": tier,
+                "length": len(content),
+                "summary": content[:280].strip() + ("..." if len(content) > 280 else ""),
+                "content": content
+            })
+    return {
+        "policies": policies,
+        "count": len(policies),
+        "authorized_count": len(policies),
+        "total_enterprise_documents": total_docs,
+        "user_role": identity.role
+    }
 
 @app.post("/api/chat", response_model=ChatResponse, tags=["Chat"])
 async def chat_endpoint(
