@@ -7,6 +7,7 @@ python-dotenv>=1.0.0
 python-multipart>=0.0.9
 requests>=2.31.0
 argon2-cffi>=23.1.0
+itsdangerous>=2.1.0
 
 # Microsoft Foundry / Azure SDKs
 azure-ai-projects>=1.0.0b1
