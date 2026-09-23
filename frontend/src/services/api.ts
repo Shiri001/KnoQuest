@@ -4,11 +4,14 @@ const envApiUrl = (import.meta as any).env?.VITE_API_URL || (import.meta as any)
 
 const API_BASE_URL = (
   envApiUrl
-    ? envApiUrl.replace(/\/$/, '')
+    ? (envApiUrl.startsWith('http://') || envApiUrl.startsWith('https://')
+        ? envApiUrl.replace(/\/$/, '')
+        : `https://${envApiUrl.replace(/\/$/, '')}`)
     : (typeof window !== 'undefined' && window.location.hostname
         ? `http://${window.location.hostname}:8000`
         : 'http://localhost:8000')
 );
+
 
 let onUnauthorizedCallback: (() => void) | null = null;
 
