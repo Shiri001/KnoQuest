@@ -78,6 +78,14 @@ class FoundryAgentService:
         clean_msg = message.strip()
         lower_msg = clean_msg.lower()
 
+        # Auto-detect language from query if not explicitly set or if query is in native script
+        if re.search(r'[\u0900-\u097F]', clean_msg) or any(w in lower_msg for w in ["हिन्दी", "हिंदी"]):
+            language = "hi"
+        elif any(w in lower_msg for w in ["español", "¿", "cuál es", "politica de"]):
+            language = "es"
+        elif any(w in lower_msg for w in ["français", "francais", "quelle est", "politique de"]):
+            language = "fr"
+
         # Helper to construct denied response
         def permission_denied_response(tool_res: Dict[str, Any], tool_name: str, params: Dict[str, Any]) -> ChatResponse:
             ans = (
@@ -924,6 +932,9 @@ class FoundryAgentService:
             answer, citations = self._generate_foundry_grounded_answer(
                 clean_msg, retrieved_chunks, history_context, session_file_id, language=language, identity=identity
             )
+            # Fail-safe: if user asked in Hindi and answer returned without Devanagari script, translate/localize
+            if language == "hi" and not re.search(r'[\u0900-\u097F]', answer):
+                answer = translate_or_localize(clean_msg, answer, "hi")
         else:
             answer, citations = self._generate_local_grounded_answer(
                 clean_msg, retrieved_chunks, history_context, session_file_id
@@ -1158,9 +1169,10 @@ class FoundryAgentService:
             if language and language != "en":
                 system_prompt += (
                     f"\nCRITICAL MULTILINGUAL INSTRUCTION:\n"
-                    f"The user has requested the answer in {target_lang_name} ({language}).\n"
-                    f"You MUST compose your entire grounded response in natural, fluent, and professional {target_lang_name}.\n"
-                    f"All explanations, counts, and policy details from the context must be accurately communicated in {target_lang_name}.\n"
+                    f"The user has asked their question in {target_lang_name} ({language}).\n"
+                    f"You MUST compose your ENTIRE response in natural, fluent, and professional {target_lang_name} (using Devanagari script for Hindi).\n"
+                    f"Do NOT answer in English. Everything must be in {target_lang_name}.\n"
+                    f"All explanations, counts, and policy details from the context must be accurately translated and communicated in {target_lang_name}.\n"
                     f"Keep official brand names like 'NovaTech Solutions', department names, and URLs or email addresses in their standard Latin format.\n"
                 )
 

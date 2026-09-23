@@ -116,6 +116,14 @@ def translate_or_localize(query: str, english_answer: str, target_lang: str) -> 
     Translates or localizes grounded answers for supported languages:
     Hindi (hi), Punjabi (pa), Spanish (es), French (fr).
     """
+    # Auto-detect script if target_lang is default/unset
+    if re.search(r'[\u0900-\u097F]', query) or any(w in query.lower() for w in ["हिन्दी", "हिंदी"]):
+        target_lang = "hi"
+    elif any(w in query.lower() for w in ["español", "¿", "cuál es"]):
+        target_lang = "es"
+    elif any(w in query.lower() for w in ["français", "francais", "quelle est"]):
+        target_lang = "fr"
+
     if not target_lang or target_lang == "en":
         return english_answer
 
